@@ -477,15 +477,20 @@
                 const detailsData = await detailsResponse.json();
 
                 // Video bilgilerini birleştir
-                currentPlaylist = allVideos.map((item, index) => {
-                    const details = detailsData.items.find(d => d.id === item.snippet.resourceId.videoId);
+                currentPlaylist = allVideos.filter(item => {
+                    // Silinmiş veya private videoları filtrele
+                    return item.snippet.title !== 'Private video' && 
+                           item.snippet.title !== 'Deleted video' &&
+                           item.snippet.thumbnails;
+                }).map((item, index) => {
+                    const details = detailsData.items ? detailsData.items.find(d => d.id === item.snippet.resourceId.videoId) : null;
                     return {
                         videoId: item.snippet.resourceId.videoId,
                         title: item.snippet.title,
-                        thumbnail: item.snippet.thumbnails.medium.url,
+                        thumbnail: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url,
                         channel: item.snippet.channelTitle,
                         duration: details ? formatDuration(details.contentDetails.duration) : 'N/A',
-                        viewCount: details ? parseInt(details.statistics.viewCount).toLocaleString('tr-TR') : '0'
+                        viewCount: details && details.statistics ? parseInt(details.statistics.viewCount).toLocaleString('tr-TR') : '0'
                     };
                 });
 
