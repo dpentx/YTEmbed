@@ -553,6 +553,17 @@
                 loadPlaylist();
             }
         });
+
+        // Sayfa yüklendiğinde URL parametresini kontrol et
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const playlistParam = urlParams.get('playlist');
+            
+            if (playlistParam) {
+                document.getElementById('playlistInput').value = playlistParam;
+                loadPlaylist();
+            }
+        });
     </script>
 </body>
 </html>
