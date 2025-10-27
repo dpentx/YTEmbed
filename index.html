@@ -3,7 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Temel Meta Tags -->
     <title>YouTube Playlist Player</title>
+    <meta name="description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
+    <meta name="keywords" content="youtube, playlist, müzik, çalma listesi, video">
+    <meta name="author" content="YouTube Playlist Player">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.vercel.app/">
+    <meta property="og:title" content="YouTube Playlist Player">
+    <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
+    <meta property="og:image" content="https://your-domain.vercel.app/preview.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="YouTube Playlist Player">
+    <meta property="og:locale" content="tr_TR">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://your-domain.vercel.app/">
+    <meta name="twitter:title" content="YouTube Playlist Player">
+    <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
+    <meta name="twitter:image" content="https://your-domain.vercel.app/preview.png">
+    
+    <!-- Discord Embed (Open Graph kullanır) -->
+    <meta name="theme-color" content="#1e3a5f">
+    
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -582,6 +609,46 @@
             document.body.classList.add('loaded');
         }
 
+        function updateMetaTags(playlistInfo, firstVideo) {
+            // Dinamik meta tag güncellemeleri
+            document.title = `${playlistInfo.title} - YouTube Playlist Player`;
+            
+            const metaDescription = document.querySelector('meta[name="description"]');
+            if (metaDescription) {
+                metaDescription.content = `${playlistInfo.title} - ${currentPlaylist.length} şarkı`;
+            }
+            
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle) {
+                ogTitle.content = playlistInfo.title;
+            }
+            
+            const ogDescription = document.querySelector('meta[property="og:description"]');
+            if (ogDescription) {
+                ogDescription.content = `${currentPlaylist.length} şarkı içeren playlist`;
+            }
+            
+            const ogImage = document.querySelector('meta[property="og:image"]');
+            if (ogImage && firstVideo) {
+                ogImage.content = firstVideo.thumbnail;
+            }
+            
+            const twitterTitle = document.querySelector('meta[name="twitter:title"]');
+            if (twitterTitle) {
+                twitterTitle.content = playlistInfo.title;
+            }
+            
+            const twitterDescription = document.querySelector('meta[name="twitter:description"]');
+            if (twitterDescription) {
+                twitterDescription.content = `${currentPlaylist.length} şarkı içeren playlist`;
+            }
+            
+            const twitterImage = document.querySelector('meta[name="twitter:image"]');
+            if (twitterImage && firstVideo) {
+                twitterImage.content = firstVideo.thumbnail;
+            }
+        }
+
         async function loadPlaylist() {
             const input = document.getElementById('playlistInput').value.trim();
             if (!input) {
@@ -652,6 +719,9 @@
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
                 document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
+                // Meta tagları güncelle
+                updateMetaTags(playlistInfo, currentPlaylist[0]);
+                
                 // URL hash'i güncelle
                 window.location.hash = playlistId;
                 
@@ -719,7 +789,6 @@
             }
         });
 
-        // Hash değişimini dinle
         window.addEventListener('hashchange', function() {
             const hash = window.location.hash.substring(1);
             if (hash) {
@@ -728,7 +797,6 @@
             }
         });
 
-        // Sayfa yüklendiğinde hash kontrolü
         window.addEventListener('DOMContentLoaded', function() {
             const hash = window.location.hash.substring(1);
             if (hash) {
@@ -740,4 +808,4 @@
         });
     </script>
 </body>
-</html>
+    </html>
