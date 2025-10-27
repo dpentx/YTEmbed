@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/playlist:(.+)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
