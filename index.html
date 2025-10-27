@@ -652,6 +652,10 @@
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
                 document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
+                // URL'yi güncelle
+                const newUrl = `${window.location.origin}/playlist:${encodeURIComponent(input)}`;
+                window.history.pushState({}, '', newUrl);
+                
                 displayPlaylist();
                 playVideo(0);
 
