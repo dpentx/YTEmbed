@@ -15,99 +15,133 @@
 
         body {
             font-family: 'Roboto', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #121212;
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.8s ease;
+        }
+
+        body.loaded {
+            background: linear-gradient(180deg, var(--theme-color, #1e3a5f) 0%, #121212 50%);
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            padding-top: 20px;
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 10px;
+            font-size: 2.2rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
 
         .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+            font-size: 0.95rem;
+            opacity: 0.7;
+            font-weight: 300;
+        }
+
+        .search-container {
+            max-width: 700px;
+            margin: 0 auto 40px;
         }
 
         .search-box {
-            background: white;
-            border-radius: 28px;
-            padding: 8px 24px;
+            background: #282828;
+            border-radius: 50px;
+            padding: 4px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
             transition: all 0.3s ease;
+            border: 2px solid transparent;
         }
 
         .search-box:focus-within {
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            background: #333;
+            border-color: rgba(255,255,255,0.1);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+        }
+
+        .search-icon {
+            color: #b3b3b3;
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
         }
 
         .search-box input {
             flex: 1;
             border: none;
             outline: none;
-            padding: 16px 0;
-            font-size: 1rem;
+            padding: 16px 8px;
+            font-size: 0.95rem;
             font-family: 'Roboto', sans-serif;
+            background: transparent;
+            color: white;
+        }
+
+        .search-box input::placeholder {
+            color: #b3b3b3;
         }
 
         .search-box button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: white;
+            color: #121212;
             border: none;
-            border-radius: 20px;
-            padding: 12px 28px;
-            font-size: 1rem;
-            font-weight: 500;
+            border-radius: 50px;
+            padding: 12px 32px;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .search-box button:hover {
             transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: #f0f0f0;
+        }
+
+        .search-box button:active {
+            transform: scale(0.98);
         }
 
         .player-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 24px;
+            background: #181818;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
         }
 
         .current-video {
-            background: linear-gradient(180deg, rgba(102, 126, 234, 0.1) 0%, transparent 100%);
-            padding: 32px;
+            background: linear-gradient(180deg, var(--theme-color-dark, #1a2332) 0%, #181818 100%);
+            padding: 40px;
+            transition: background 0.8s ease;
         }
 
         .video-wrapper {
             position: relative;
             padding-bottom: 56.25%;
             background: #000;
-            border-radius: 16px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+            margin-bottom: 24px;
         }
 
         .video-wrapper iframe {
@@ -121,139 +155,182 @@
         .video-info {
             display: flex;
             align-items: flex-start;
-            gap: 20px;
+            gap: 24px;
         }
 
         .video-thumbnail {
-            width: 120px;
-            height: 90px;
-            border-radius: 12px;
+            width: 140px;
+            height: 140px;
+            border-radius: 4px;
             object-fit: cover;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
 
         .video-details {
             flex: 1;
+            padding-top: 8px;
+        }
+
+        .video-type {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #b3b3b3;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
 
         .video-title {
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 8px;
-            line-height: 1.4;
+            color: white;
+            margin-bottom: 12px;
+            line-height: 1.3;
+            letter-spacing: -0.5px;
         }
 
         .video-channel {
             font-size: 1rem;
-            color: #666;
-            margin-bottom: 4px;
+            color: #b3b3b3;
+            margin-bottom: 16px;
+            font-weight: 400;
         }
 
         .video-stats {
             display: flex;
-            gap: 16px;
-            font-size: 0.9rem;
-            color: #888;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: #b3b3b3;
+            align-items: center;
+        }
+
+        .video-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stats-dot {
+            width: 4px;
+            height: 4px;
+            background: #b3b3b3;
+            border-radius: 50%;
         }
 
         .playlist-section {
-            padding: 24px 32px;
-            max-height: 500px;
-            overflow-y: auto;
+            padding: 24px 40px 32px;
+            background: #181818;
         }
 
         .playlist-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 2px solid #f0f0f0;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
         }
 
         .playlist-title {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            color: #1a1a1a;
+            color: white;
+            letter-spacing: -0.5px;
         }
 
         .playlist-count {
-            font-size: 0.95rem;
-            color: #666;
-            background: #f5f5f5;
-            padding: 6px 16px;
-            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #b3b3b3;
+            font-weight: 400;
+        }
+
+        .playlist-content {
+            max-height: 500px;
+            overflow-y: auto;
+            margin: 0 -8px;
+            padding: 0 8px;
         }
 
         .video-item {
             display: flex;
             gap: 16px;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 10px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
         }
 
         .video-item:hover {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            transform: translateX(4px);
+            background: #282828;
         }
 
         .video-item.active {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-            border-left: 4px solid #667eea;
+            background: #282828;
         }
 
         .video-item-thumbnail {
-            width: 120px;
-            height: 68px;
-            border-radius: 8px;
+            width: 80px;
+            height: 45px;
+            border-radius: 4px;
             object-fit: cover;
-            position: relative;
+            flex-shrink: 0;
         }
 
         .video-item-info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .video-item-title {
-            font-size: 1rem;
-            font-weight: 500;
-            color: #1a1a1a;
-            margin-bottom: 6px;
+            font-size: 0.95rem;
+            font-weight: 400;
+            color: white;
+            margin-bottom: 4px;
             overflow: hidden;
             text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            line-height: 1.4;
+            white-space: nowrap;
+        }
+
+        .video-item.active .video-item-title {
+            color: var(--theme-color-light, #1db954);
+            font-weight: 500;
+        }
+
+        .video-item-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: #b3b3b3;
         }
 
         .video-item-channel {
-            font-size: 0.85rem;
-            color: #666;
-            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .video-item-duration {
-            font-size: 0.8rem;
-            color: #888;
+        .meta-dot {
+            width: 3px;
+            height: 3px;
+            background: #b3b3b3;
+            border-radius: 50%;
         }
 
         .loading {
             text-align: center;
-            padding: 60px 20px;
+            padding: 80px 20px;
             color: white;
         }
 
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
@@ -265,61 +342,71 @@
         }
 
         .error {
-            background: #fff3cd;
-            color: #856404;
-            padding: 20px;
-            border-radius: 12px;
+            background: #5a2a27;
+            color: #f4b8b4;
+            padding: 16px 20px;
+            border-radius: 8px;
             margin-bottom: 20px;
             display: none;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 0.9rem;
         }
 
         .empty-state {
             text-align: center;
-            padding: 80px 20px;
+            padding: 100px 20px;
             color: white;
         }
 
         .empty-state .material-icons {
-            font-size: 120px;
-            opacity: 0.5;
-            margin-bottom: 20px;
+            font-size: 80px;
+            opacity: 0.3;
+            margin-bottom: 24px;
         }
 
         .empty-state h2 {
-            font-size: 1.8rem;
-            margin-bottom: 12px;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            font-weight: 600;
         }
 
         .empty-state p {
-            font-size: 1.1rem;
-            opacity: 0.8;
+            font-size: 0.95rem;
+            color: #b3b3b3;
+            font-weight: 300;
         }
 
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 12px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
+            background: transparent;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #282828;
             border-radius: 10px;
+            border: 3px solid #181818;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #5568d3 0%, #64398b 100%);
+            background: #3e3e3e;
         }
 
         @media (max-width: 768px) {
+            body {
+                padding: 12px;
+            }
+
             .header h1 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
 
             .current-video {
-                padding: 20px;
+                padding: 24px 20px;
             }
 
             .video-info {
@@ -329,50 +416,67 @@
             .video-thumbnail {
                 width: 100%;
                 height: auto;
+                max-width: 200px;
+            }
+
+            .video-title {
+                font-size: 1.5rem;
             }
 
             .playlist-section {
-                padding: 16px 20px;
+                padding: 20px;
             }
 
             .video-item-thumbnail {
-                width: 100px;
-                height: 56px;
+                width: 64px;
+                height: 36px;
             }
+
+            .search-box button {
+                padding: 12px 20px;
+                font-size: 0.8rem;
+            }
+        }
+
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎵 YouTube Playlist Player</h1>
-            <p>Playlist URL'nizi girin ve müziğin tadını çıkarın</p>
+            <h1>YouTube Playlist Player</h1>
+            <p>Playlistlerini keşfet ve müziğin tadını çıkar</p>
         </div>
 
-        <div class="search-box">
-            <span class="material-icons" style="color: #667eea;">playlist_play</span>
-            <input type="text" id="playlistInput" placeholder="YouTube Playlist URL'sini buraya yapıştırın...">
-            <button onclick="loadPlaylist()">
-                <span class="material-icons">search</span>
-                Yükle
-            </button>
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-icon">
+                    <span class="material-icons">search</span>
+                </div>
+                <input type="text" id="playlistInput" placeholder="Playlist URL veya ID girin...">
+                <button onclick="loadPlaylist()">
+                    Yükle
+                </button>
+            </div>
         </div>
 
         <div class="error" id="errorBox"></div>
 
-        <div id="loadingBox" class="loading" style="display: none;">
+        <div id="loadingBox" class="loading hidden">
             <div class="loading-spinner"></div>
-            <h3>Playlist yükleniyor...</h3>
+            <p>Playlist yükleniyor...</p>
         </div>
 
         <div id="emptyState" class="empty-state">
-            <span class="material-icons">queue_music</span>
-            <h2>Henüz bir playlist yüklenmedi</h2>
-            <p>Yukarıdaki kutucuğa YouTube playlist URL'nizi yapıştırarak başlayın</p>
+            <span class="material-icons">library_music</span>
+            <h2>Playlist bekleniyor</h2>
+            <p>Yukarıya bir YouTube playlist linki yapıştırın</p>
         </div>
 
-        <div class="player-container" id="playerContainer" style="display: none;">
-            <div class="current-video">
+        <div class="player-container hidden" id="playerContainer">
+            <div class="current-video" id="currentVideoSection">
                 <div class="video-wrapper">
                     <iframe id="videoPlayer" frameborder="0" allowfullscreen
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
@@ -384,9 +488,9 @@
             <div class="playlist-section">
                 <div class="playlist-header">
                     <div class="playlist-title" id="playlistTitle">Playlist</div>
-                    <div class="playlist-count" id="videoCount">0 video</div>
+                    <div class="playlist-count" id="videoCount">0 şarkı</div>
                 </div>
-                <div id="videoList"></div>
+                <div class="playlist-content" id="videoList"></div>
             </div>
         </div>
     </div>
@@ -404,8 +508,10 @@
         function showError(message) {
             const errorBox = document.getElementById('errorBox');
             errorBox.textContent = message;
+            errorBox.classList.remove('hidden');
             errorBox.style.display = 'block';
             setTimeout(() => {
+                errorBox.classList.add('hidden');
                 errorBox.style.display = 'none';
             }, 5000);
         }
@@ -422,6 +528,60 @@
             return `${minutes || '0'}:${seconds.padStart(2, '0')}`;
         }
 
+        function extractColors(imageUrl) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    try {
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const data = imageData.data;
+                        let r = 0, g = 0, b = 0;
+                        
+                        for (let i = 0; i < data.length; i += 40) {
+                            r += data[i];
+                            g += data[i + 1];
+                            b += data[i + 2];
+                        }
+                        
+                        const pixelCount = data.length / 40;
+                        r = Math.floor(r / pixelCount);
+                        g = Math.floor(g / pixelCount);
+                        b = Math.floor(b / pixelCount);
+                        
+                        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                        const factor = brightness > 128 ? 0.6 : 1.2;
+                        
+                        r = Math.min(255, Math.floor(r * factor));
+                        g = Math.min(255, Math.floor(g * factor));
+                        b = Math.min(255, Math.floor(b * factor));
+                        
+                        resolve({ r, g, b });
+                    } catch (e) {
+                        resolve({ r: 30, g: 58, b: 95 });
+                    }
+                };
+                img.onerror = function() {
+                    resolve({ r: 30, g: 58, b: 95 });
+                };
+                img.src = imageUrl;
+            });
+        }
+
+        function applyThemeColor(color) {
+            const root = document.documentElement;
+            root.style.setProperty('--theme-color', `rgb(${color.r}, ${color.g}, ${color.b})`);
+            root.style.setProperty('--theme-color-dark', `rgb(${Math.floor(color.r * 0.6)}, ${Math.floor(color.g * 0.6)}, ${Math.floor(color.b * 0.6)})`);
+            root.style.setProperty('--theme-color-light', `rgb(${Math.min(255, color.r + 60)}, ${Math.min(255, color.g + 60)}, ${Math.min(255, color.b + 60)})`);
+            document.body.classList.add('loaded');
+        }
+
         async function loadPlaylist() {
             const input = document.getElementById('playlistInput').value.trim();
             if (!input) {
@@ -436,11 +596,10 @@
                     return;
                 }
 
-                document.getElementById('loadingBox').style.display = 'block';
-                document.getElementById('emptyState').style.display = 'none';
-                document.getElementById('playerContainer').style.display = 'none';
+                document.getElementById('loadingBox').classList.remove('hidden');
+                document.getElementById('emptyState').classList.add('hidden');
+                document.getElementById('playerContainer').classList.add('hidden');
 
-                // Playlist bilgilerini çek
                 const playlistResponse = await fetch(
                     `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`
                 );
@@ -452,7 +611,6 @@
 
                 const playlistInfo = playlistData.items[0].snippet;
 
-                // Playlist videolarını çek
                 let allVideos = [];
                 let nextPageToken = '';
 
@@ -469,16 +627,13 @@
                     nextPageToken = data.nextPageToken;
                 } while (nextPageToken);
 
-                // Video detaylarını çek (süre için)
                 const videoIds = allVideos.map(item => item.snippet.resourceId.videoId).join(',');
                 const detailsResponse = await fetch(
                     `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`
                 );
                 const detailsData = await detailsResponse.json();
 
-                // Video bilgilerini birleştir
                 currentPlaylist = allVideos.filter(item => {
-                    // Silinmiş veya private videoları filtrele
                     return item.snippet.title !== 'Private video' && 
                            item.snippet.title !== 'Deleted video' &&
                            item.snippet.thumbnails;
@@ -495,19 +650,19 @@
                 });
 
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
-                document.getElementById('videoCount').textContent = `${currentPlaylist.length} video`;
+                document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
                 displayPlaylist();
                 playVideo(0);
 
-                document.getElementById('loadingBox').style.display = 'none';
-                document.getElementById('playerContainer').style.display = 'block';
+                document.getElementById('loadingBox').classList.add('hidden');
+                document.getElementById('playerContainer').classList.remove('hidden');
 
             } catch (error) {
                 console.error('Hata:', error);
                 showError('Playlist yüklenirken bir hata oluştu: ' + error.message);
-                document.getElementById('loadingBox').style.display = 'none';
-                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('loadingBox').classList.add('hidden');
+                document.getElementById('emptyState').classList.remove('hidden');
             }
         }
 
@@ -518,14 +673,17 @@
                     <img src="${video.thumbnail}" alt="${video.title}" class="video-item-thumbnail">
                     <div class="video-item-info">
                         <div class="video-item-title">${video.title}</div>
-                        <div class="video-item-channel">${video.channel}</div>
-                        <div class="video-item-duration">${video.duration}</div>
+                        <div class="video-item-meta">
+                            <span class="video-item-channel">${video.channel}</span>
+                            <span class="meta-dot"></span>
+                            <span>${video.duration}</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function playVideo(index) {
+        async function playVideo(index) {
             currentVideoIndex = index;
             const video = currentPlaylist[index];
             
@@ -533,35 +691,40 @@
                 `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
             
             document.getElementById('currentVideoInfo').innerHTML = `
-                <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail">
+                <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail" id="mainThumbnail">
                 <div class="video-details">
+                    <div class="video-type">Video</div>
                     <div class="video-title">${video.title}</div>
                     <div class="video-channel">${video.channel}</div>
                     <div class="video-stats">
-                        <span><span class="material-icons" style="font-size: 16px; vertical-align: middle;">visibility</span> ${video.viewCount} görüntülenme</span>
-                        <span><span class="material-icons" style="font-size: 16px; vertical-align: middle;">schedule</span> ${video.duration}</span>
+                        <span>${video.viewCount} görüntülenme</span>
+                        <span class="stats-dot"></span>
+                        <span>${video.duration}</span>
                     </div>
                 </div>
             `;
 
+            const colors = await extractColors(video.thumbnail);
+            applyThemeColor(colors);
+
             displayPlaylist();
         }
 
-        // Enter tuşuyla arama
         document.getElementById('playlistInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 loadPlaylist();
             }
         });
 
-        // Sayfa yüklendiğinde URL parametresini kontrol et
         window.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const playlistParam = urlParams.get('playlist');
             
             if (playlistParam) {
                 document.getElementById('playlistInput').value = playlistParam;
-                loadPlaylist();
+                setTimeout(() => {
+                    loadPlaylist();
+                }, 500);
             }
         });
     </script>
