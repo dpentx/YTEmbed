@@ -2,19 +2,8 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/:playlist",
-      "destination": "/api/og?list=:playlist",
-      "has": [
-        {
-          "type": "header",
-          "key": "user-agent",
-          "value": ".*(bot|crawler|spider|scrapy|facebook|twitter|discord|slack|whatsapp|telegram).*"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/PL:playlist*",
+      "destination": "/api/og?playlist=PL:playlist"
     }
   ]
 }
