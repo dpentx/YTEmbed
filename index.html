@@ -652,9 +652,8 @@
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
                 document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
-                // URL'yi güncelle
-                const newUrl = `${window.location.origin}/playlist:${encodeURIComponent(input)}`;
-                window.history.pushState({}, '', newUrl);
+                // URL hash'i güncelle
+                window.location.hash = playlistId;
                 
                 displayPlaylist();
                 playVideo(0);
@@ -720,25 +719,20 @@
             }
         });
 
-        window.addEventListener('DOMContentLoaded', function() {
-            // Yeni format: /playlist:PLAYLIST_URL_VEYA_ID
-            const path = window.location.pathname;
-            const playlistMatch = path.match(/\/playlist:(.+)/);
-            
-            if (playlistMatch) {
-                const playlistData = decodeURIComponent(playlistMatch[1]);
-                document.getElementById('playlistInput').value = playlistData;
-                setTimeout(() => {
-                    loadPlaylist();
-                }, 500);
+        // Hash değişimini dinle
+        window.addEventListener('hashchange', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                document.getElementById('playlistInput').value = hash;
+                loadPlaylist();
             }
-            
-            // Eski format için backward compatibility
-            const urlParams = new URLSearchParams(window.location.search);
-            const playlistParam = urlParams.get('playlist');
-            
-            if (playlistParam && !playlistMatch) {
-                document.getElementById('playlistInput').value = playlistParam;
+        });
+
+        // Sayfa yüklendiğinde hash kontrolü
+        window.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                document.getElementById('playlistInput').value = hash;
                 setTimeout(() => {
                     loadPlaylist();
                 }, 500);
