@@ -255,6 +255,8 @@
             align-items: center;
             margin-bottom: 16px;
             padding-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .playlist-title {
@@ -264,10 +266,40 @@
             letter-spacing: -0.5px;
         }
 
+        .playlist-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .playlist-count {
             font-size: 0.85rem;
             color: #b3b3b3;
             font-weight: 400;
+        }
+
+        .share-button {
+            background: #282828;
+            color: white;
+            border: 1px solid #404040;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .share-button:hover {
+            background: #383838;
+            border-color: #505050;
+        }
+
+        .share-button .material-icons {
+            font-size: 16px;
         }
 
         .playlist-content {
@@ -515,7 +547,13 @@
             <div class="playlist-section">
                 <div class="playlist-header">
                     <div class="playlist-title" id="playlistTitle">Playlist</div>
-                    <div class="playlist-count" id="videoCount">0 şarkı</div>
+                    <div class="playlist-meta">
+                        <div class="playlist-count" id="videoCount">0 şarkı</div>
+                        <button class="share-button" onclick="sharePlaylist()" title="Playlist'i paylaş">
+                            <span class="material-icons">share</span>
+                            Paylaş
+                        </button>
+                    </div>
                 </div>
                 <div class="playlist-content" id="videoList"></div>
             </div>
@@ -526,6 +564,38 @@
         const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
         let currentPlaylist = [];
         let currentVideoIndex = 0;
+        let currentPlaylistId = '';
+
+        function sharePlaylist() {
+            if (!currentPlaylistId) return;
+            
+            const shareUrl = `${window.location.origin}/p/${currentPlaylistId}`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('playlistTitle').textContent,
+                    text: `${currentPlaylist.length} şarkı içeren playlist`,
+                    url: shareUrl
+                }).catch(() => {
+                    copyToClipboard(shareUrl);
+                });
+            } else {
+                copyToClipboard(shareUrl);
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.share-button');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<span class="material-icons">check</span>Kopyalandı!';
+                btn.style.background = '#1db954';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            });
+        }
 
         function extractPlaylistId(url) {
             const urlObj = new URL(url.includes('http') ? url : 'https://www.youtube.com/playlist?list=' + url);
@@ -657,6 +727,8 @@
                     showError('Geçersiz playlist URL\'si!');
                     return;
                 }
+
+                currentPlaylistId = playlistId;
 
                 document.getElementById('loadingBox').classList.remove('hidden');
                 document.getElementById('emptyState').classList.add('hidden');
@@ -803,4 +875,4 @@
         });
     </script>
 </body>
-</html>
+    </html>
