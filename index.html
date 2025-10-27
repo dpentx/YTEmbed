@@ -11,11 +11,11 @@
     <meta name="author" content="YouTube Playlist Player">
     
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://your-domain.vercel.app/">
-    <meta property="og:title" content="YouTube Playlist Player">
-    <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
-    <meta property="og:image" content="https://your-domain.vercel.app/preview.png">
+    <meta property="og:type" content="website" id="ogType">
+    <meta property="og:url" content="https://your-domain.vercel.app/" id="ogUrl">
+    <meta property="og:title" content="YouTube Playlist Player" id="ogTitle">
+    <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="ogDescription">
+    <meta property="og:image" content="https://your-domain.vercel.app/preview.png" id="ogImage">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:site_name" content="YouTube Playlist Player">
@@ -23,10 +23,10 @@
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://your-domain.vercel.app/">
-    <meta name="twitter:title" content="YouTube Playlist Player">
-    <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
-    <meta name="twitter:image" content="https://your-domain.vercel.app/preview.png">
+    <meta name="twitter:url" content="https://your-domain.vercel.app/" id="twitterUrl">
+    <meta name="twitter:title" content="YouTube Playlist Player" id="twitterTitle">
+    <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="twitterDescription">
+    <meta name="twitter:image" content="https://your-domain.vercel.app/preview.png" id="twitterImage">
     
     <!-- Discord Embed (Open Graph kullanır) -->
     <meta name="theme-color" content="#1e3a5f">
@@ -613,39 +613,35 @@
             // Dinamik meta tag güncellemeleri
             document.title = `${playlistInfo.title} - YouTube Playlist Player`;
             
+            // Playlist URL'ini al
+            const currentUrl = window.location.href;
+            
+            // İlk 5 şarkının isimlerini açıklamaya ekle
+            const songList = currentPlaylist.slice(0, 5).map(v => v.title).join(' • ');
+            const description = `${currentPlaylist.length} şarkı: ${songList}${currentPlaylist.length > 5 ? ' ve daha fazlası...' : ''}`;
+            
+            // Meta description
             const metaDescription = document.querySelector('meta[name="description"]');
             if (metaDescription) {
-                metaDescription.content = `${playlistInfo.title} - ${currentPlaylist.length} şarkı`;
+                metaDescription.content = description;
             }
             
-            const ogTitle = document.querySelector('meta[property="og:title"]');
-            if (ogTitle) {
-                ogTitle.content = playlistInfo.title;
+            // Open Graph Tags
+            document.getElementById('ogTitle').setAttribute('content', playlistInfo.title);
+            document.getElementById('ogDescription').setAttribute('content', description);
+            document.getElementById('ogUrl').setAttribute('content', currentUrl);
+            
+            if (firstVideo) {
+                document.getElementById('ogImage').setAttribute('content', firstVideo.thumbnail);
             }
             
-            const ogDescription = document.querySelector('meta[property="og:description"]');
-            if (ogDescription) {
-                ogDescription.content = `${currentPlaylist.length} şarkı içeren playlist`;
-            }
+            // Twitter Card Tags
+            document.getElementById('twitterTitle').setAttribute('content', playlistInfo.title);
+            document.getElementById('twitterDescription').setAttribute('content', description);
+            document.getElementById('twitterUrl').setAttribute('content', currentUrl);
             
-            const ogImage = document.querySelector('meta[property="og:image"]');
-            if (ogImage && firstVideo) {
-                ogImage.content = firstVideo.thumbnail;
-            }
-            
-            const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-            if (twitterTitle) {
-                twitterTitle.content = playlistInfo.title;
-            }
-            
-            const twitterDescription = document.querySelector('meta[name="twitter:description"]');
-            if (twitterDescription) {
-                twitterDescription.content = `${currentPlaylist.length} şarkı içeren playlist`;
-            }
-            
-            const twitterImage = document.querySelector('meta[name="twitter:image"]');
-            if (twitterImage && firstVideo) {
-                twitterImage.content = firstVideo.thumbnail;
+            if (firstVideo) {
+                document.getElementById('twitterImage').setAttribute('content', firstVideo.thumbnail);
             }
         }
 
@@ -808,4 +804,4 @@
         });
     </script>
 </body>
-    </html>
+</html>
