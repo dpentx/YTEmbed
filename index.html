@@ -717,10 +717,23 @@
         });
 
         window.addEventListener('DOMContentLoaded', function() {
+            // Yeni format: /playlist:PLAYLIST_URL_VEYA_ID
+            const path = window.location.pathname;
+            const playlistMatch = path.match(/\/playlist:(.+)/);
+            
+            if (playlistMatch) {
+                const playlistData = decodeURIComponent(playlistMatch[1]);
+                document.getElementById('playlistInput').value = playlistData;
+                setTimeout(() => {
+                    loadPlaylist();
+                }, 500);
+            }
+            
+            // Eski format için backward compatibility
             const urlParams = new URLSearchParams(window.location.search);
             const playlistParam = urlParams.get('playlist');
             
-            if (playlistParam) {
+            if (playlistParam && !playlistMatch) {
                 document.getElementById('playlistInput').value = playlistParam;
                 setTimeout(() => {
                     loadPlaylist();
