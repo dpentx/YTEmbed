@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     // Tam URL
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
-    const fullUrl = `${protocol}://${host}/p/${list}`;
+    const fullUrl = `${protocol}://${host}/${list}`;
     const redirectUrl = `${protocol}://${host}/#${list}`;
 
     // HTML ile meta tagları döndür
