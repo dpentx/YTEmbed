@@ -616,9 +616,14 @@
             // Playlist URL'ini al
             const currentUrl = window.location.href;
             
-            // İlk 5 şarkının isimlerini açıklamaya ekle
-            const songList = currentPlaylist.slice(0, 5).map(v => v.title).join(' • ');
-            const description = `${currentPlaylist.length} şarkı: ${songList}${currentPlaylist.length > 5 ? ' ve daha fazlası...' : ''}`;
+            // Playlist kapak resmini al (YouTube'dan)
+            const playlistThumbnail = playlistInfo.thumbnails?.high?.url || 
+                                     playlistInfo.thumbnails?.medium?.url || 
+                                     playlistInfo.thumbnails?.default?.url ||
+                                     (firstVideo ? firstVideo.thumbnail : '');
+            
+            // Daha güzel açıklama formatı
+            const description = `🎵 ${currentPlaylist.length} şarkı içeren playlist\n📝 ${playlistInfo.channelTitle || 'YouTube'} tarafından oluşturuldu`;
             
             // Meta description
             const metaDescription = document.querySelector('meta[name="description"]');
@@ -630,19 +635,13 @@
             document.getElementById('ogTitle').setAttribute('content', playlistInfo.title);
             document.getElementById('ogDescription').setAttribute('content', description);
             document.getElementById('ogUrl').setAttribute('content', currentUrl);
-            
-            if (firstVideo) {
-                document.getElementById('ogImage').setAttribute('content', firstVideo.thumbnail);
-            }
+            document.getElementById('ogImage').setAttribute('content', playlistThumbnail);
             
             // Twitter Card Tags
             document.getElementById('twitterTitle').setAttribute('content', playlistInfo.title);
             document.getElementById('twitterDescription').setAttribute('content', description);
             document.getElementById('twitterUrl').setAttribute('content', currentUrl);
-            
-            if (firstVideo) {
-                document.getElementById('twitterImage').setAttribute('content', firstVideo.thumbnail);
-            }
+            document.getElementById('twitterImage').setAttribute('content', playlistThumbnail);
         }
 
         async function loadPlaylist() {
