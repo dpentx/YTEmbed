@@ -1,5 +1,10 @@
 {
+  "version": 2,
   "rewrites": [
+    {
+      "source": "/p/:playlist",
+      "destination": "/api/og?list=:playlist"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
