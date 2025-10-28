@@ -55,28 +55,44 @@ export default async function handler(req, res) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${playlistTitle} - YouTube Playlist Player</title>
+    <title>🎵 ${playlistTitle} | ${itemCount} Video - YouTube Playlist Player</title>
     
-    <!-- Open Graph / Facebook / Discord -->
-    <meta property="og:type" content="website">
+    <!-- Open Graph / Facebook / Discord / Xenforo -->
+    <meta property="og:type" content="music.playlist">
     <meta property="og:url" content="${shareUrl}">
-    <meta property="og:title" content="${playlistTitle}">
-    <meta property="og:description" content="${description}">
+    <meta property="og:title" content="🎵 ${playlistTitle}">
+    <meta property="og:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu • YouTube Playlist Player ile dinle">
     <meta property="og:image" content="${thumbnail}">
+    <meta property="og:image:secure_url" content="${thumbnail}">
+    <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
+    <meta property="og:image:alt" content="${playlistTitle} - Playlist Kapağı">
     <meta property="og:site_name" content="YouTube Playlist Player">
     <meta property="og:locale" content="tr_TR">
+    <meta property="music:song_count" content="${itemCount}">
+    <meta property="music:creator" content="${playlistChannel}">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@youtube">
     <meta name="twitter:url" content="${shareUrl}">
-    <meta name="twitter:title" content="${playlistTitle}">
-    <meta name="twitter:description" content="${description}">
+    <meta name="twitter:title" content="🎵 ${playlistTitle}">
+    <meta name="twitter:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu">
     <meta name="twitter:image" content="${thumbnail}">
+    <meta name="twitter:image:alt" content="${playlistTitle} - Playlist Kapağı">
+    
+    <!-- Standard Meta Tags for Xenforo -->
+    <meta name="description" content="${itemCount} video içeren ${playlistTitle} - ${playlistChannel} tarafından oluşturuldu. YouTube Playlist Player ile dinle.">
+    <meta name="keywords" content="youtube, playlist, müzik, ${playlistChannel}, ${playlistTitle}">
+    <meta name="author" content="${playlistChannel}">
     
     <!-- Discord Embed Rengi -->
     <meta name="theme-color" content="#FF0000">
+    
+    <!-- oEmbed Discovery -->
+    <link rel="alternate" type="application/json+oembed" href="${protocol}://${host}/api/oembed?url=${encodeURIComponent(shareUrl)}&format=json" title="${playlistTitle}">
+    <link rel="alternate" type="text/xml+oembed" href="${protocol}://${host}/api/oembed?url=${encodeURIComponent(shareUrl)}&format=xml" title="${playlistTitle}">
     
     <!-- Otomatik yönlendirme -->
     <meta http-equiv="refresh" content="0;url=${playUrl}">
