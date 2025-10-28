@@ -56,13 +56,14 @@ export default async function handler(req, res) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎵 ${playlistTitle} | ${itemCount} Video - YouTube Playlist Player</title>
-    
+
     <!-- Open Graph / Facebook / Discord / Xenforo -->
-    <meta property="og:type" content="music.playlist">
+    <meta property="og:type" content="video.other">
     <meta property="og:url" content="${shareUrl}">
     <meta property="og:title" content="🎵 ${playlistTitle}">
     <meta property="og:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu • YouTube Playlist Player ile dinle">
     <meta property="og:image" content="${thumbnail}">
+    <meta property="og:image:url" content="${thumbnail}">
     <meta property="og:image:secure_url" content="${thumbnail}">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1280">
@@ -70,8 +71,15 @@ export default async function handler(req, res) {
     <meta property="og:image:alt" content="${playlistTitle} - Playlist Kapağı">
     <meta property="og:site_name" content="YouTube Playlist Player">
     <meta property="og:locale" content="tr_TR">
-    <meta property="music:song_count" content="${itemCount}">
-    <meta property="music:creator" content="${playlistChannel}">
+    <meta property="video:duration" content="${itemCount * 180}">
+    <meta property="video:tag" content="playlist">
+    <meta property="video:tag" content="müzik">
+    
+    <!-- Xenforo özel tag'ler -->
+    <meta name="thumbnail" content="${thumbnail}">
+    <meta itemprop="name" content="${playlistTitle}">
+    <meta itemprop="description" content="${itemCount} video • ${playlistChannel}">
+    <meta itemprop="image" content="${thumbnail}">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
