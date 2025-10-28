@@ -569,6 +569,7 @@
         function sharePlaylist() {
             if (!currentPlaylistId) return;
             
+            // Domain + playlist ID
             const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
             
             if (navigator.share) {
@@ -875,4 +876,4 @@
         });
     </script>
 </body>
-                            </html>
+    </html>
