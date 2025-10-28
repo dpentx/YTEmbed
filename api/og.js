@@ -1,8 +1,6 @@
 export default async function handler(req, res) {
-  // URL'den playlist ID'yi al
   let playlistId = req.query.playlist || req.query.list;
   
-  // PL prefix'i yoksa ekle
   if (playlistId && !playlistId.startsWith('PL')) {
     playlistId = 'PL' + playlistId;
   }
@@ -14,7 +12,6 @@ export default async function handler(req, res) {
   const API_KEY = process.env.YOUTUBE_API_KEY || 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
   
   try {
-    // Playlist bilgilerini al
     const playlistRes = await fetch(
       `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${playlistId}&key=${API_KEY}`
     );
@@ -34,89 +31,60 @@ export default async function handler(req, res) {
       day: 'numeric'
     });
     
-    // Playlist kapak görseli
     const thumbnail = playlist.snippet.thumbnails?.maxres?.url ||
                      playlist.snippet.thumbnails?.high?.url ||
                      playlist.snippet.thumbnails?.medium?.url ||
                      playlist.snippet.thumbnails?.default?.url;
     
-    // Açıklama
-    const description = `🎵 ${itemCount} video • 📝 ${playlistChannel} • 📅 ${publishedAt}`;
-    
-    // URL'ler
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
     const shareUrl = `${protocol}://${host}/${playlistId}`;
     const playUrl = `${protocol}://${host}/#${playlistId}`;
 
-    // HTML ile meta tagları döndür - tıklayınca oynatıcıya git
+    // User agent kontrolü - bot mu değil mi?
+    const userAgent = req.headers['user-agent'] || '';
+    const isBot = /bot|crawler|spider|facebookexternalhit|twitterbot|discordbot|slackbot|whatsapp|telegrambot|xenforo/i.test(userAgent);
+
     const html = `<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎵 ${playlistTitle} | ${itemCount} Video - YouTube Playlist Player</title>
-
-    <!-- Open Graph / Facebook / Discord / Xenforo -->
-    <meta property="og:type" content="video.other">
+    <title>${playlistTitle}</title>
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="${playlistTitle}">
+    <meta name="description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu">
+    
+    <!-- Open Graph / Facebook / Xenforo -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="YouTube Playlist Player">
     <meta property="og:url" content="${shareUrl}">
-    <meta property="og:title" content="🎵 ${playlistTitle}">
-    <meta property="og:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu • YouTube Playlist Player ile dinle">
+    <meta property="og:title" content="${playlistTitle}">
+    <meta property="og:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu">
     <meta property="og:image" content="${thumbnail}">
-    <meta property="og:image:url" content="${thumbnail}">
     <meta property="og:image:secure_url" content="${thumbnail}">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
-    <meta property="og:image:alt" content="${playlistTitle} - Playlist Kapağı">
-    <meta property="og:site_name" content="YouTube Playlist Player">
-    <meta property="og:locale" content="tr_TR">
-    <meta property="video:duration" content="${itemCount * 180}">
-    <meta property="video:tag" content="playlist">
-    <meta property="video:tag" content="müzik">
     
-    <!-- Xenforo özel tag'ler -->
-    <meta name="thumbnail" content="${thumbnail}">
-    <meta itemprop="name" content="${playlistTitle}">
-    <meta itemprop="description" content="${itemCount} video • ${playlistChannel}">
-    <meta itemprop="image" content="${thumbnail}">
-    
-    <!-- Twitter Card -->
+    <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@youtube">
     <meta name="twitter:url" content="${shareUrl}">
-    <meta name="twitter:title" content="🎵 ${playlistTitle}">
+    <meta name="twitter:title" content="${playlistTitle}">
     <meta name="twitter:description" content="${itemCount} video • ${playlistChannel} tarafından oluşturuldu">
     <meta name="twitter:image" content="${thumbnail}">
-    <meta name="twitter:image:alt" content="${playlistTitle} - Playlist Kapağı">
     
-    <!-- Standard Meta Tags for Xenforo -->
-    <meta name="description" content="${itemCount} video içeren ${playlistTitle} - ${playlistChannel} tarafından oluşturuldu. YouTube Playlist Player ile dinle.">
-    <meta name="keywords" content="youtube, playlist, müzik, ${playlistChannel}, ${playlistTitle}">
-    <meta name="author" content="${playlistChannel}">
-    
-    <!-- Discord Embed Rengi -->
-    <meta name="theme-color" content="#FF0000">
-    
-    <!-- oEmbed Discovery -->
+    <!-- oEmbed -->
     <link rel="alternate" type="application/json+oembed" href="${protocol}://${host}/api/oembed?url=${encodeURIComponent(shareUrl)}&format=json" title="${playlistTitle}">
-    <link rel="alternate" type="text/xml+oembed" href="${protocol}://${host}/api/oembed?url=${encodeURIComponent(shareUrl)}&format=xml" title="${playlistTitle}">
     
-    <!-- Otomatik yönlendirme -->
-    <meta http-equiv="refresh" content="0;url=${playUrl}">
-    <script>
-      window.location.href = '${playUrl}';
-    </script>
+    ${!isBot ? `<meta http-equiv="refresh" content="0;url=${playUrl}">` : ''}
+    ${!isBot ? `<script>window.location.href = '${playUrl}';</script>` : ''}
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
@@ -124,7 +92,6 @@ export default async function handler(req, res) {
             min-height: 100vh;
             padding: 20px;
         }
-        
         .card {
             background: white;
             border-radius: 16px;
@@ -134,36 +101,23 @@ export default async function handler(req, res) {
             overflow: hidden;
             animation: fadeIn 0.5s ease;
         }
-        
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        
         .thumbnail {
             width: 100%;
             height: 280px;
             object-fit: cover;
             display: block;
         }
-        
-        .content {
-            padding: 24px;
-        }
-        
+        .content { padding: 24px; }
         .spinner-container {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 16px;
         }
-        
         .spinner {
             border: 3px solid rgba(102, 126, 234, 0.2);
             border-top: 3px solid #667eea;
@@ -172,18 +126,15 @@ export default async function handler(req, res) {
             height: 24px;
             animation: spin 0.8s linear infinite;
         }
-        
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
         .loading-text {
             color: #667eea;
             font-size: 14px;
             font-weight: 600;
         }
-        
         h1 {
             font-size: 24px;
             font-weight: 700;
@@ -191,14 +142,12 @@ export default async function handler(req, res) {
             margin-bottom: 16px;
             line-height: 1.3;
         }
-        
         .info-grid {
             display: flex;
             flex-direction: column;
             gap: 12px;
             margin-bottom: 20px;
         }
-        
         .info-item {
             display: flex;
             align-items: center;
@@ -206,23 +155,11 @@ export default async function handler(req, res) {
             color: #666;
             font-size: 14px;
         }
-        
-        .info-icon {
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-        
         .info-label {
             font-weight: 600;
             color: #333;
             min-width: 60px;
         }
-        
-        .info-value {
-            color: #666;
-        }
-        
         .action-button {
             display: inline-block;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -232,93 +169,47 @@ export default async function handler(req, res) {
             border-radius: 8px;
             font-weight: 600;
             font-size: 14px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease;
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
-        
         .action-button:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
         }
-        
-        .footer {
-            text-align: center;
-            padding-top: 16px;
-            border-top: 1px solid #eee;
-            margin-top: 20px;
-        }
-        
-        .footer-text {
-            color: #999;
-            font-size: 12px;
-        }
-        
         @media (max-width: 480px) {
-            .card {
-                border-radius: 12px;
-            }
-            
-            .thumbnail {
-                height: 200px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            h1 {
-                font-size: 20px;
-            }
-            
-            .info-item {
-                font-size: 13px;
-            }
+            .card { border-radius: 12px; }
+            .thumbnail { height: 200px; }
+            .content { padding: 20px; }
+            h1 { font-size: 20px; }
         }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="${thumbnail}" alt="${playlistTitle}" class="thumbnail" onerror="this.style.display='none'">
-        
+        <img src="${thumbnail}" alt="${playlistTitle}" class="thumbnail">
         <div class="content">
+            ${!isBot ? `
             <div class="spinner-container">
                 <div class="spinner"></div>
                 <span class="loading-text">Playlist açılıyor...</span>
             </div>
-            
+            ` : ''}
             <h1>${playlistTitle}</h1>
-            
             <div class="info-grid">
                 <div class="info-item">
-                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM10 16H8V8H10V16ZM14 16H12V8H14V16ZM18 16H16V8H18V16Z" fill="#667eea"/>
-                    </svg>
                     <span class="info-label">Video:</span>
-                    <span class="info-value">${itemCount} adet</span>
+                    <span>${itemCount} adet</span>
                 </div>
-                
                 <div class="info-item">
-                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#667eea"/>
-                    </svg>
                     <span class="info-label">Oluşturan:</span>
-                    <span class="info-value">${playlistChannel}</span>
+                    <span>${playlistChannel}</span>
                 </div>
-                
                 <div class="info-item">
-                    <svg class="info-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 4H5C3.89 4 3 4.9 3 6V18C3 19.1 3.89 20 5 20H19C20.1 20 21 19.1 21 18V6C21 4.9 20.1 4 19 4ZM19 18H5V8H19V18ZM7 10H17V12H7V10ZM7 14H14V16H7V14Z" fill="#667eea"/>
-                    </svg>
                     <span class="info-label">Tarih:</span>
-                    <span class="info-value">${publishedAt}</span>
+                    <span>${publishedAt}</span>
                 </div>
             </div>
-            
             <a href="${playUrl}" class="action-button">▶ Playlist'i Oynat</a>
-            
-            <div class="footer">
-                <p class="footer-text">YouTube Playlist Player ile dinle</p>
-            </div>
         </div>
     </div>
 </body>
@@ -332,4 +223,4 @@ export default async function handler(req, res) {
     console.error('Error fetching playlist:', error);
     return res.redirect(302, '/');
   }
-}
+      }
