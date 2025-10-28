@@ -32,14 +32,14 @@ export default async function handler(req, res) {
       day: 'numeric'
     });
     
-    // Playlist thumbnail'ını al
-    const thumbnail = playlist.snippet.thumbnails?.maxres?.url ||
-                     playlist.snippet.thumbnails?.standard?.url ||
-                     playlist.snippet.thumbnails?.high?.url ||
-                     playlist.snippet.thumbnails?.medium?.url ||
-                     playlist.snippet.thumbnails?.default?.url;
+    // ÖNCE playlist thumbnail'ını al (en yüksek kalite)
+    const playlistThumbnail = playlist.snippet.thumbnails?.maxres?.url ||
+                              playlist.snippet.thumbnails?.standard?.url ||
+                              playlist.snippet.thumbnails?.high?.url ||
+                              playlist.snippet.thumbnails?.medium?.url ||
+                              playlist.snippet.thumbnails?.default?.url;
     
-    // İlk 10 videoyu al (önizleme için)
+    // İlk 10 videoyu al
     const playlistItemsRes = await fetch(
       `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=10&playlistId=${playlistId}&key=${API_KEY}`
     );
@@ -51,15 +51,25 @@ export default async function handler(req, res) {
       .map(item => item.snippet.resourceId.videoId)
       .join(',') || '';
     
-    // Video detaylarını al (süre bilgisi için)
+    // Video detaylarını al
     let totalDuration = 0;
     let videos = [];
+    let firstVideoThumbnail = playlistThumbnail; // Fallback olarak playlist thumbnail
     
     if (videoIds) {
       const videosRes = await fetch(
         `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
       );
       const videosData = await videosRes.json();
+      
+      // İlk videonun high-res thumbnail'ını al
+      if (videosData.items && videosData.items.length > 0) {
+        firstVideoThumbnail = videosData.items[0].snippet.thumbnails?.maxresdefault?.url ||
+                             videosData.items[0].snippet.thumbnails?.standard?.url ||
+                             videosData.items[0].snippet.thumbnails?.high?.url ||
+                             videosData.items[0].snippet.thumbnails?.medium?.url ||
+                             playlistThumbnail;
+      }
       
       videos = videosData.items?.map(video => ({
         title: video.snippet.title,
@@ -86,9 +96,14 @@ export default async function handler(req, res) {
     let durationText = '';
     if (hours > 0) {
       durationText = `${hours} saat ${minutes} dakika`;
-    } else {
+    } else if (minutes > 0) {
       durationText = `${minutes} dakika`;
+    } else {
+      durationText = `${totalDuration} saniye`;
     }
+    
+    // En iyi thumbnail'ı seç (playlist veya ilk video)
+    const bestThumbnail = firstVideoThumbnail;
     
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
@@ -99,6 +114,9 @@ export default async function handler(req, res) {
     const userAgent = req.headers['user-agent'] || '';
     const isBot = /bot|crawler|spider|facebookexternalhit|twitterbot|discordbot|slackbot|whatsapp|telegrambot|xenforo|linkedin/i.test(userAgent);
 
+    // Meta description
+    const metaDescription = `${itemCount} video • ${durationText} • ${playlistChannel}`;
+
     const html = `<!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -108,21 +126,22 @@ export default async function handler(req, res) {
     
     <!-- Primary Meta Tags -->
     <meta name="title" content="${playlistTitle}">
-    <meta name="description" content="${itemCount} video • ${durationText} • ${playlistChannel}">
+    <meta name="description" content="${metaDescription}">
     
     <!-- Open Graph / Facebook -->
+    <meta property="fb:app_id" content="966242223397117">
     <meta property="og:type" content="video.other">
     <meta property="og:site_name" content="YouTube Playlist Player">
     <meta property="og:url" content="${shareUrl}">
     <meta property="og:title" content="${playlistTitle}">
-    <meta property="og:description" content="${itemCount} video • ${durationText} • ${playlistChannel}">
-    <meta property="og:image" content="${thumbnail}">
-    <meta property="og:image:secure_url" content="${thumbnail}">
+    <meta property="og:description" content="${metaDescription}">
+    <meta property="og:image" content="${bestThumbnail}">
+    <meta property="og:image:secure_url" content="${bestThumbnail}">
     <meta property="og:image:type" content="image/jpeg">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
-    <meta property="og:video" content="${shareUrl}">
-    <meta property="og:video:secure_url" content="${shareUrl}">
+    <meta property="og:video" content="${playUrl}">
+    <meta property="og:video:secure_url" content="${playUrl}">
     <meta property="og:video:type" content="text/html">
     <meta property="og:video:width" content="1280">
     <meta property="og:video:height" content="720">
@@ -132,11 +151,14 @@ export default async function handler(req, res) {
     <meta name="twitter:site" content="@youtube">
     <meta name="twitter:url" content="${shareUrl}">
     <meta name="twitter:title" content="${playlistTitle}">
-    <meta name="twitter:description" content="${itemCount} video • ${durationText} • ${playlistChannel}">
-    <meta name="twitter:image" content="${thumbnail}">
+    <meta name="twitter:description" content="${metaDescription}">
+    <meta name="twitter:image" content="${bestThumbnail}">
     <meta name="twitter:player" content="${playUrl}">
     <meta name="twitter:player:width" content="1280">
     <meta name="twitter:player:height" content="720">
+    
+    <!-- Discord / WhatsApp -->
+    <meta name="theme-color" content="#667eea">
     
     <!-- oEmbed Discovery -->
     <link rel="alternate" type="application/json+oembed" 
@@ -361,7 +383,7 @@ export default async function handler(req, res) {
 <body>
     <div class="container">
         <div class="cover">
-            <img src="${thumbnail}" alt="${playlistTitle.replace(/"/g, '&quot;')}">
+            <img src="${bestThumbnail}" alt="${playlistTitle.replace(/"/g, '&quot;')}">
             <div class="play-overlay">
                 <div class="play-icon"></div>
             </div>
@@ -378,8 +400,7 @@ export default async function handler(req, res) {
                 <span>📝 ${playlistChannel}</span>
                 <span class="dot"></span>
                 <span>🎵 ${itemCount} video</span>
-                <span class="dot"></span>
-                <span>⏱️ ${durationText}</span>
+                ${durationText ? `<span class="dot"></span><span>⏱️ ${durationText}</span>` : ''}
             </div>
             
             ${videos.length > 0 ? `
@@ -419,4 +440,4 @@ export default async function handler(req, res) {
     console.error('Error fetching playlist:', error);
     return res.redirect(302, '/');
   }
-  }
+      }
