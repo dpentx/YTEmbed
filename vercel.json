@@ -2,8 +2,16 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/oembed",
+      "destination": "/api/oembed"
+    },
+    {
       "source": "/PL:playlist(.*)",
       "destination": "/api/og?playlist=PL$1"
+    },
+    {
+      "source": "/(PL[a-zA-Z0-9_-]{16,})",
+      "destination": "/api/og?playlist=$1"
     },
     {
       "source": "/(.*)",
