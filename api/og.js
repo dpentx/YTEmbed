@@ -1,14 +1,33 @@
 export default async function handler(req, res) {
-  // URL'den playlist ID'yi al (query veya path'den)
-  const playlistId = req.query.playlist || req.query.list;
+  // URL'den playlist ID'yi al
+  let playlistId = req.query.playlist || req.query.list;
   
-  if (!playlistId || !playlistId.startsWith('PL')) {
+  // PL prefix'i yoksa ekle
+  if (playlistId && !playlistId.startsWith('PL')) {
+    playlistId = 'PL' + playlistId;
+  }
+  
+  if (!playlistId || playlistId.length < 10) {
     return res.redirect(302, '/');
   }
 
-  // User-Agent kontrolü
-  const userAgent = req.headers['user-agent'] || '';
-  const isBot = /bot|crawler|spider|scrapy|facebookexternalhit|twitterbot|discordbot|slackbot|whatsapp|telegrambot|linkedinbot|pinterest|redditbot/i.test(userAgent);
+  // User-Agent kontrolü - bot mu?
+  const userAgent = (req.headers['user-agent'] || '').toLowerCase();
+  const isBot = userAgent.includes('bot') || 
+                userAgent.includes('crawler') || 
+                userAgent.includes('spider') ||
+                userAgent.includes('facebook') ||
+                userAgent.includes('twitter') ||
+                userAgent.includes('discord') ||
+                userAgent.includes('slack') ||
+                userAgent.includes('whatsapp') ||
+                userAgent.includes('telegram') ||
+                userAgent.includes('linkedin') ||
+                userAgent.includes('pinterest') ||
+                userAgent.includes('reddit');
+  
+  console.log('User-Agent:', userAgent);
+  console.log('Is Bot:', isBot);
   
   // Normal tarayıcıysa ana sayfaya yönlendir
   if (!isBot) {
