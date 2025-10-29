@@ -11,25 +11,26 @@
     <meta name="author" content="YouTube Playlist Player">
     
     <!-- Open Graph / Facebook -->
+    <meta property="fb:app_id" content="966242223397117">
     <meta property="og:type" content="website" id="ogType">
-    <meta property="og:url" content="https://your-domain.vercel.app/" id="ogUrl">
+    <meta property="og:url" content="" id="ogUrl">
     <meta property="og:title" content="YouTube Playlist Player" id="ogTitle">
     <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="ogDescription">
-    <meta property="og:image" content="https://your-domain.vercel.app/preview.png" id="ogImage">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
+    <meta property="og:image" content="" id="ogImage">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="720">
     <meta property="og:site_name" content="YouTube Playlist Player">
     <meta property="og:locale" content="tr_TR">
     
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://your-domain.vercel.app/" id="twitterUrl">
+    <meta name="twitter:url" content="" id="twitterUrl">
     <meta name="twitter:title" content="YouTube Playlist Player" id="twitterTitle">
     <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="twitterDescription">
-    <meta name="twitter:image" content="https://your-domain.vercel.app/preview.png" id="twitterImage">
+    <meta name="twitter:image" content="" id="twitterImage">
     
-    <!-- Discord Embed (Open Graph kullanır) -->
-    <meta name="theme-color" content="#1e3a5f">
+    <!-- Discord Embed -->
+    <meta name="theme-color" content="#667eea">
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -569,7 +570,6 @@
         function sharePlaylist() {
             if (!currentPlaylistId) return;
             
-            // Domain + playlist ID
             const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
             
             if (navigator.share) {
@@ -681,34 +681,29 @@
         }
 
         function updateMetaTags(playlistInfo, firstVideo) {
-            // Dinamik meta tag güncellemeleri
             document.title = `${playlistInfo.title} - YouTube Playlist Player`;
             
-            // Playlist URL'ini al
-            const currentUrl = window.location.href;
+            const currentUrl = `${window.location.origin}/${currentPlaylistId}`;
             
-            // Playlist kapak resmini al (YouTube'dan)
-            const playlistThumbnail = playlistInfo.thumbnails?.high?.url || 
+            const playlistThumbnail = firstVideo?.thumbnail || 
+                                     playlistInfo.thumbnails?.maxres?.url || 
+                                     playlistInfo.thumbnails?.high?.url || 
                                      playlistInfo.thumbnails?.medium?.url || 
                                      playlistInfo.thumbnails?.default?.url ||
-                                     (firstVideo ? firstVideo.thumbnail : '');
+                                     '';
             
-            // Daha güzel açıklama formatı
-            const description = `🎵 ${currentPlaylist.length} şarkı içeren playlist\n📝 ${playlistInfo.channelTitle || 'YouTube'} tarafından oluşturuldu`;
+            const description = `${currentPlaylist.length} video • ${playlistInfo.channelTitle || 'YouTube'}`;
             
-            // Meta description
             const metaDescription = document.querySelector('meta[name="description"]');
             if (metaDescription) {
                 metaDescription.content = description;
             }
             
-            // Open Graph Tags
             document.getElementById('ogTitle').setAttribute('content', playlistInfo.title);
             document.getElementById('ogDescription').setAttribute('content', description);
             document.getElementById('ogUrl').setAttribute('content', currentUrl);
             document.getElementById('ogImage').setAttribute('content', playlistThumbnail);
             
-            // Twitter Card Tags
             document.getElementById('twitterTitle').setAttribute('content', playlistInfo.title);
             document.getElementById('twitterDescription').setAttribute('content', description);
             document.getElementById('twitterUrl').setAttribute('content', currentUrl);
@@ -764,7 +759,7 @@
 
                 const videoIds = allVideos.map(item => item.snippet.resourceId.videoId).join(',');
                 const detailsResponse = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics&id=${videoIds}&key=${API_KEY}`
+                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id=${videoIds}&key=${API_KEY}`
                 );
                 const detailsData = await detailsResponse.json();
 
@@ -777,7 +772,11 @@
                     return {
                         videoId: item.snippet.resourceId.videoId,
                         title: item.snippet.title,
-                        thumbnail: item.snippet.thumbnails.medium ? item.snippet.thumbnails.medium.url : item.snippet.thumbnails.default.url,
+                        thumbnail: details?.snippet?.thumbnails?.maxresdefault?.url ||
+                                  details?.snippet?.thumbnails?.standard?.url ||
+                                  details?.snippet?.thumbnails?.high?.url ||
+                                  item.snippet.thumbnails.medium?.url || 
+                                  item.snippet.thumbnails.default?.url,
                         channel: item.snippet.channelTitle,
                         duration: details ? formatDuration(details.contentDetails.duration) : 'N/A',
                         viewCount: details && details.statistics ? parseInt(details.statistics.viewCount).toLocaleString('tr-TR') : '0'
@@ -787,10 +786,8 @@
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
                 document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
-                // Meta tagları güncelle
                 updateMetaTags(playlistInfo, currentPlaylist[0]);
                 
-                // URL hash'i güncelle
                 window.location.hash = playlistId;
                 
                 displayPlaylist();
@@ -876,4 +873,4 @@
         });
     </script>
 </body>
-    </html>
+            </html>
