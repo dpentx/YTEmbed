@@ -103,12 +103,15 @@ export default async function handler(req, res) {
     }
     
     // En iyi thumbnail'ı seç (playlist veya ilk video)
-    const bestThumbnail = firstVideoThumbnail;
+    const bestThumbnail = firstVideoThumbnail || playlistThumbnail || 'https://i.ytimg.com/img/no_thumbnail.jpg';
+    
+    // Debug için log
+    console.log('Thumbnail URL:', bestThumbnail);
     
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
     const shareUrl = `${protocol}://${host}/${playlistId}`;
-    const playUrl = `${protocol}://${host}/#${playlistId}`;
+    const playUrl = `${protocol}://${host}/${playlistId}`; // # kaldırıldı
 
     // User agent kontrolü
     const userAgent = req.headers['user-agent'] || '';
@@ -440,4 +443,4 @@ export default async function handler(req, res) {
     console.error('Error fetching playlist:', error);
     return res.redirect(302, '/');
   }
-      }
+}
