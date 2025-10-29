@@ -570,6 +570,7 @@
         function sharePlaylist() {
             if (!currentPlaylistId) return;
             
+            // Hash (#) yerine slash (/) kullan - Facebook için
             const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
             
             if (navigator.share) {
@@ -873,4 +874,4 @@
         });
     </script>
 </body>
-            </html>
+    </html>
