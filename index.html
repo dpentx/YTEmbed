@@ -570,21 +570,20 @@
         function sharePlaylist() {
             if (!currentPlaylistId) return;
             
-            // Hash (#) yerine slash (/) kullan - Facebook için
-            const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: document.getElementById('playlistTitle').textContent,
-                    text: `${currentPlaylist.length} şarkı içeren playlist`,
-                    url: shareUrl
-                }).catch(() => {
-                    copyToClipboard(shareUrl);
-                });
-            } else {
-                copyToClipboard(shareUrl);
-            }
-        }
+    const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: document.getElementById('playlistTitle').textContent,
+            text: `${currentPlaylist.length} şarkı içeren playlist`,
+            url: shareUrl
+        }).catch(() => {
+            copyToClipboard(shareUrl);
+        });
+    } else {
+        copyToClipboard(shareUrl);
+    }
+}
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
@@ -649,7 +648,7 @@
                             b += data[i + 2];
                         }
                         
-                        const pixelCount = data.length / 40;
+                        const pixelCount = data.length /YOK;
                         r = Math.floor(r / pixelCount);
                         g = Math.floor(g / pixelCount);
                         b = Math.floor(b / pixelCount);
@@ -788,8 +787,8 @@
                 document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
                 
                 updateMetaTags(playlistInfo, currentPlaylist[0]);
-                
-                window.location.hash = playlistId;
+
+                window.history.pushState({}, '', `/${playlistId}`);
                 
                 displayPlaylist();
                 playVideo(0);
@@ -872,6 +871,33 @@
                 }, 500);
             }
         });
+
+        function getPlaylistIdFromUrl() {
+    const pathname = window.location.pathname;
+    // /PLxxxxxx formatından ID çıkar
+    const match = pathname.match(/\/(PL[a-zA-Z0-9_-]{16,})/);
+    return match ? match[1] : null;
+}
+
+// hashchange yerine popstate kullan:
+window.addEventListener('popstate', function() {
+    const playlistId = getPlaylistIdFromUrl();
+    if (playlistId) {
+        document.getElementById('playlistInput').value = playlistId;
+        loadPlaylist();
+    }
+});
+
+// DOMContentLoaded güncellemesi:
+window.addEventListener('DOMContentLoaded', function() {
+    const playlistId = getPlaylistIdFromUrl();
+    if (playlistId) {
+        document.getElementById('playlistInput').value = playlistId;
+        setTimeout(() => {
+            loadPlaylist();
+        }, 500);
+    }
+});
     </script>
 </body>
     </html>
