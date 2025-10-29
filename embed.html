@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Playlist Embed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #121212;
+            color: white;
+            overflow: hidden;
+        }
+
+        .embed-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .video-player {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            background: #000;
+        }
+
+        .video-player iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .playlist-section {
+            flex: 1;
+            overflow-y: auto;
+            background: #181818;
+            padding: 16px;
+        }
+
+        .playlist-header {
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #282828;
+        }
+
+        .playlist-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .playlist-meta {
+            font-size: 13px;
+            color: #b3b3b3;
+        }
+
+        .video-item {
+            display: flex;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-bottom: 4px;
+        }
+
+        .video-item:hover {
+            background: #282828;
+        }
+
+        .video-item.active {
+            background: #282828;
+        }
+
+        .video-thumb {
+            width: 80px;
+            height: 45px;
+            border-radius: 4px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .video-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .video-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .video-item.active .video-title {
+            color: #1db954;
+        }
+
+        .video-meta {
+            font-size: 12px;
+            color: #b3b3b3;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #181818;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #282828;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3e3e3e;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Playlist yükleniyor...</p>
+    </div>
+
+    <div id="player" class="embed-container" style="display: none;">
+        <div class="video-player">
+            <iframe id="videoFrame" frameborder="0" allowfullscreen
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+            </iframe>
+        </div>
+        <div class="playlist-section">
+            <div class="playlist-header">
+                <div class="playlist-title" id="playlistTitle">Playlist</div>
+                <div class="playlist-meta" id="playlistMeta">0 video</div>
+            </div>
+            <div id="videoList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
+        let playlist = [];
+        let currentIndex = 0;
+        let playlistId = '';
+
+        function getPlaylistId() {
+            const hash = window.location.hash.substring(1);
+            const params = new URLSearchParams(window.location.search);
+            return hash || params.get('list') || params.get('playlist');
+        }
+
+        function formatDuration(duration) {
+            const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+            const hours = (match[1] || '').replace('H', '');
+            const minutes = (match[2] || '').replace('M', '');
+            const seconds = (match[3] || '').replace('S', '');
+            
+            if (hours) {
+                return `${hours}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
+            }
+            return `${minutes || '0'}:${seconds.padStart(2, '0')}`;
+        }
+
+        async function loadPlaylist() {
+            playlistId = getPlaylistId();
+            
+            if (!playlistId) {
+                document.getElementById('loading').innerHTML = '<p>Playlist ID bulunamadı</p>';
+                return;
+            }
+
+            try {
+                // Playlist bilgisi
+                const playlistRes = await fetch(
+                    `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`
+                );
+                const playlistData = await playlistRes.json();
+
+                if (!playlistData.items || playlistData.items.length === 0) {
+                    throw new Error('Playlist bulunamadı');
+                }
+
+                const playlistInfo = playlistData.items[0].snippet;
+
+                // Tüm videoları çek
+                let allVideos = [];
+                let nextPageToken = '';
+
+                do {
+                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    allVideos = allVideos.concat(data.items);
+                    nextPageToken = data.nextPageToken;
+                } while (nextPageToken);
+
+                // Video detayları
+                const videoIds = allVideos
+                    .filter(item => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
+                    .map(item => item.snippet.resourceId.videoId)
+                    .join(',');
+
+                const detailsRes = await fetch(
+                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
+                );
+                const detailsData = await detailsRes.json();
+
+                playlist = allVideos
+                    .filter(item => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
+                    .map(item => {
+                        const details = detailsData.items.find(d => d.id === item.snippet.resourceId.videoId);
+                        return {
+                            videoId: item.snippet.resourceId.videoId,
+                            title: item.snippet.title,
+                            thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
+                            channel: item.snippet.channelTitle,
+                            duration: details ? formatDuration(details.contentDetails.duration) : 'N/A'
+                        };
+                    });
+
+                // UI'ı güncelle
+                document.getElementById('playlistTitle').textContent = playlistInfo.title;
+                document.getElementById('playlistMeta').textContent = `${playlist.length} video • ${playlistInfo.channelTitle}`;
+
+                renderPlaylist();
+                playVideo(0);
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('player').style.display = 'flex';
+
+            } catch (error) {
+                console.error('Hata:', error);
+                document.getElementById('loading').innerHTML = `<p>Hata: ${error.message}</p>`;
+            }
+        }
+
+        function renderPlaylist() {
+            const listEl = document.getElementById('videoList');
+            listEl.innerHTML = playlist.map((video, index) => `
+                <div class="video-item ${index === currentIndex ? 'active' : ''}" onclick="playVideo(${index})">
+                    <img src="${video.thumbnail}" alt="${video.title}" class="video-thumb">
+                    <div class="video-info">
+                        <div class="video-title">${video.title}</div>
+                        <div class="video-meta">${video.channel} • ${video.duration}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function playVideo(index) {
+            currentIndex = index;
+            const video = playlist[index];
+            
+            document.getElementById('videoFrame').src = 
+                `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
+            
+            renderPlaylist();
+        }
+
+        // Sayfa yüklendiğinde playlist'i yükle
+        window.addEventListener('DOMContentLoaded', loadPlaylist);
+    </script>
+</body>
+  </html>
