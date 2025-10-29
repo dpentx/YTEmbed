@@ -6,6 +6,10 @@
       "destination": "/api/oembed"
     },
     {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
       "source": "/PL([a-zA-Z0-9_-]{16,})",
       "destination": "/api/og?playlist=PL$1"
     },
