@@ -37,6 +37,9 @@ export default async function handler(req, res) {
     const protocol = req.headers['x-forwarded-proto'] || 'https';
     const host = req.headers.host;
     
+    // Embed player URL'i
+    const embedUrl = `${protocol}://${host}/embed.html#${playlistId}`;
+    
     if (format === 'xml') {
       const xml = `<?xml version="1.0" encoding="utf-8"?>
 <oembed>
@@ -51,7 +54,7 @@ export default async function handler(req, res) {
   <thumbnail_url>${thumbnail}</thumbnail_url>
   <thumbnail_width>1280</thumbnail_width>
   <thumbnail_height>720</thumbnail_height>
-  <html>&lt;iframe src="${protocol}://${host}/#${playlistId}" width="${maxwidth}" height="${maxheight}" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</html>
+  <html>&lt;iframe src="${embedUrl}" width="${maxwidth}" height="${maxheight}" frameborder="0" allowfullscreen&gt;&lt;/iframe&gt;</html>
 </oembed>`;
       
       res.setHeader('Content-Type', 'text/xml; charset=utf-8');
@@ -70,7 +73,7 @@ export default async function handler(req, res) {
       thumbnail_url: thumbnail,
       thumbnail_width: 1280,
       thumbnail_height: 720,
-      html: `<iframe src="${protocol}://${host}/#${playlistId}" width="${maxwidth}" height="${maxheight}" frameborder="0" allowfullscreen></iframe>`
+      html: `<iframe src="${embedUrl}" width="${maxwidth}" height="${maxheight}" frameborder="0" allowfullscreen style="border:none;"></iframe>`
     };
 
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
