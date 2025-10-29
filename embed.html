@@ -183,7 +183,14 @@
         function getPlaylistId() {
             const hash = window.location.hash.substring(1);
             const params = new URLSearchParams(window.location.search);
-            return hash || params.get('list') || params.get('playlist');
+            let id = hash || params.get('list') || params.get('playlist');
+            
+            // PL ile başlamıyorsa ekle
+            if (id && !id.startsWith('PL')) {
+                id = 'PL' + id;
+            }
+            
+            return id;
         }
 
         function formatDuration(duration) {
@@ -202,19 +209,30 @@
             playlistId = getPlaylistId();
             
             if (!playlistId) {
-                document.getElementById('loading').innerHTML = '<p>Playlist ID bulunamadı</p>';
+                document.getElementById('loading').innerHTML = '<p style="color: #ff6b6b;">Playlist ID bulunamadı</p>';
                 return;
             }
 
+            console.log('Loading playlist:', playlistId); // Debug için
+
             try {
                 // Playlist bilgisi
-                const playlistRes = await fetch(
-                    `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`
-                );
+                const playlistUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`;
+                console.log('Fetching URL:', playlistUrl);
+                
+                const playlistRes = await fetch(playlistUrl);
                 const playlistData = await playlistRes.json();
 
+                console.log('Response status:', playlistRes.status);
+                console.log('Playlist data:', playlistData);
+
+                // API error kontrolü
+                if (playlistData.error) {
+                    throw new Error(`API Error: ${playlistData.error.message} (${playlistData.error.code})`);
+                }
+
                 if (!playlistData.items || playlistData.items.length === 0) {
-                    throw new Error('Playlist bulunamadı');
+                    throw new Error('Playlist bulunamadı - items boş');
                 }
 
                 const playlistInfo = playlistData.items[0].snippet;
@@ -268,7 +286,10 @@
 
             } catch (error) {
                 console.error('Hata:', error);
-                document.getElementById('loading').innerHTML = `<p>Hata: ${error.message}</p>`;
+                document.getElementById('loading').innerHTML = `
+                    <p style="color: #ff6b6b;">Hata: ${error.message}</p>
+                    <p style="font-size: 12px; margin-top: 8px;">Playlist ID: ${playlistId}</p>
+                `;
             }
         }
 
