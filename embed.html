@@ -1,323 +1,699 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Playlist Embed</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YTEmbed Player</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #121212;
-            color: white;
-            overflow: hidden;
-        }
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1e1e1e;
+    --border: rgba(255,255,255,0.06);
+    --text: #e8e8e8;
+    --text-dim: #666;
+    --accent: #1ed760;
+    --accent-dim: rgba(30,215,96,0.15);
+    --radius: 12px;
+  }
 
-        .embed-container {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+  * { margin:0; padding:0; box-sizing:border-box; }
 
-        .video-player {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%;
-            background: #000;
-        }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    overflow: hidden;
+  }
 
-        .video-player iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
+  /* ── SIZE MODES ─────────────────────────────── */
+  .player {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+  }
 
-        .playlist-section {
-            flex: 1;
-            overflow-y: auto;
-            background: #181818;
-            padding: 16px;
-        }
+  /* ── AMBIENT GLOW ──────────────────────────── */
+  .ambient {
+    position: absolute;
+    inset: 0;
+    opacity: 0.07;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--thumb-color, #1ed760), transparent);
+    pointer-events: none;
+    transition: background 1.2s ease;
+    z-index: 0;
+  }
 
-        .playlist-header {
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #282828;
-        }
+  /* ── COMPACT BAR (80px) ────────────────────── */
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    height: 80px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
 
-        .playlist-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
+  .bar-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+    transition: transform 0.3s ease;
+  }
+  .bar-thumb.pulse { animation: thumbPulse 0.4s ease; }
+  @keyframes thumbPulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(0.93); }
+    100% { transform: scale(1); }
+  }
 
-        .playlist-meta {
-            font-size: 13px;
-            color: #b3b3b3;
-        }
+  .bar-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-        .video-item {
-            display: flex;
-            gap: 12px;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 4px;
-        }
+  .bar-title {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
 
-        .video-item:hover {
-            background: #282828;
-        }
+  .bar-channel {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-        .video-item.active {
-            background: #282828;
-        }
+  /* Progress micro bar */
+  .bar-progress {
+    height: 2px;
+    background: var(--surface2);
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+  }
+  .bar-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    width: 0%;
+    transition: width 1s linear;
+  }
 
-        .video-thumb {
-            width: 80px;
-            height: 45px;
-            border-radius: 4px;
-            object-fit: cover;
-            flex-shrink: 0;
-        }
+  /* Controls */
+  .bar-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
 
-        .video-info {
-            flex: 1;
-            min-width: 0;
-        }
+  .ctrl-btn {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+    font-size: 14px;
+  }
+  .ctrl-btn:hover { color: var(--text); background: var(--surface2); }
+  .ctrl-btn.play-btn {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    color: #000;
+  }
+  .ctrl-btn.play-btn:hover { background: #22e865; transform: scale(1.06); }
 
-        .video-title {
-            font-size: 14px;
-            font-weight: 500;
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+  .expand-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+    font-size: 11px;
+    margin-left: 4px;
+  }
+  .expand-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
 
-        .video-item.active .video-title {
-            color: #1db954;
-        }
+  /* ── PLAYLIST PANEL ────────────────────────── */
+  .panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    position: relative;
+    z-index: 1;
+  }
 
-        .video-meta {
-            font-size: 12px;
-            color: #b3b3b3;
-        }
+  .panel-header {
+    padding: 12px 14px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
 
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            flex-direction: column;
-            gap: 16px;
-        }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
 
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+  .panel-count {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+  .panel-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 8px;
+  }
 
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
+  .panel-list::-webkit-scrollbar { width: 4px; }
+  .panel-list::-webkit-scrollbar-track { background: transparent; }
+  .panel-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
 
-        ::-webkit-scrollbar-track {
-            background: #181818;
-        }
+  .track-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+  .track-item:hover { background: var(--surface2); }
+  .track-item.active { background: var(--accent-dim); }
 
-        ::-webkit-scrollbar-thumb {
-            background: #282828;
-            border-radius: 4px;
-        }
+  .track-num {
+    width: 20px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .track-item.active .track-num { color: var(--accent); }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3e3e3e;
-        }
-    </style>
+  .track-playing {
+    display: none;
+    align-items: center;
+    gap: 2px;
+    width: 20px;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .track-item.active .track-playing { display: flex; }
+  .track-item.active .track-num-val { display: none; }
+
+  .bar-wave {
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite alternate;
+  }
+  .bar-wave:nth-child(2) { animation-delay: 0.2s; height: 8px; }
+  .bar-wave:nth-child(3) { animation-delay: 0.4s; height: 5px; }
+  .bar-wave:nth-child(1) { height: 10px; }
+  @keyframes wave {
+    from { transform: scaleY(0.4); }
+    to   { transform: scaleY(1); }
+  }
+  .paused .bar-wave { animation-play-state: paused; }
+
+  .track-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+  }
+
+  .track-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .track-name {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .track-item.active .track-name { color: var(--accent); }
+  .track-ch {
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .track-dur {
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  /* ── LOADING / EMPTY ───────────────────────── */
+  .state-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--bg);
+    z-index: 10;
+  }
+  .state-overlay.hidden { display: none; }
+
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid var(--surface2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .state-msg { font-size: 12px; color: var(--text-dim); }
+
+  /* ── HIDDEN YOUTUBE FRAME ──────────────────── */
+  #yt-frame {
+    position: absolute;
+    width: 1px; height: 1px;
+    top: -9999px; left: -9999px;
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  /* ── SIZE CLASSES ──────────────────────────── */
+  body.size-compact .panel { display: none; }
+  body.size-compact .bar { height: 80px; }
+
+  body.size-normal .panel { display: none; }
+  body.size-normal .bar { height: 80px; }
+
+  body.size-full .bar { border-bottom: 1px solid var(--border); }
+
+  /* ── TOAST ─────────────────────────────────── */
+  .toast {
+    position: absolute;
+    bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 99px;
+    white-space: nowrap;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
 </head>
-<body>
-    <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Playlist yükleniyor...</p>
+<body class="size-full">
+
+<div class="player" id="player">
+  <div class="ambient" id="ambient"></div>
+
+  <!-- Compact bar -->
+  <div class="bar">
+    <img class="bar-thumb" id="barThumb" src="" alt="">
+    <div class="bar-info">
+      <div class="bar-title" id="barTitle">Playlist bekleniyor</div>
+      <div class="bar-channel" id="barChannel">—</div>
+      <div class="bar-progress">
+        <div class="bar-progress-fill" id="progressFill"></div>
+      </div>
     </div>
-
-    <div id="player" class="embed-container" style="display: none;">
-        <div class="video-player">
-            <iframe id="videoFrame" frameborder="0" allowfullscreen
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-            </iframe>
-        </div>
-        <div class="playlist-section">
-            <div class="playlist-header">
-                <div class="playlist-title" id="playlistTitle">Playlist</div>
-                <div class="playlist-meta" id="playlistMeta">0 video</div>
-            </div>
-            <div id="videoList"></div>
-        </div>
+    <div class="bar-controls">
+      <button class="ctrl-btn" id="btnPrev" onclick="prevTrack()" title="Önceki">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+      </button>
+      <button class="ctrl-btn play-btn" id="btnPlay" onclick="togglePlay()" title="Oynat/Durdur">
+        <svg id="iconPlay" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="iconPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+      </button>
+      <button class="ctrl-btn" id="btnNext" onclick="nextTrack()" title="Sonraki">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+      </button>
+      <button class="expand-btn" id="btnExpand" onclick="togglePanel()" title="Listeyi Aç/Kapat">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" id="expandIcon"><path d="M7 10l5 5 5-5z"/></svg>
+      </button>
     </div>
+  </div>
 
-    <script>
-        const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
-        let playlist = [];
-        let currentIndex = 0;
-        let playlistId = '';
+  <!-- Playlist panel -->
+  <div class="panel" id="panel">
+    <div class="panel-header">
+      <span class="panel-title" id="panelTitle">Playlist</span>
+      <span class="panel-count" id="panelCount">0 video</span>
+    </div>
+    <div class="panel-list" id="panelList"></div>
+  </div>
 
-        function getPlaylistId() {
-            const hash = window.location.hash.substring(1);
-            const params = new URLSearchParams(window.location.search);
-            let id = hash || params.get('list') || params.get('playlist');
-            
-            // PL ile başlamıyorsa ekle
-            if (id && !id.startsWith('PL')) {
-                id = 'PL' + id;
-            }
-            
-            return id;
-        }
+  <!-- Loading overlay -->
+  <div class="state-overlay" id="stateOverlay">
+    <div class="spinner" id="spinner"></div>
+    <div class="state-msg" id="stateMsg">Yükleniyor...</div>
+  </div>
 
-        function formatDuration(duration) {
-            const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-            const hours = (match[1] || '').replace('H', '');
-            const minutes = (match[2] || '').replace('M', '');
-            const seconds = (match[3] || '').replace('S', '');
-            
-            if (hours) {
-                return `${hours}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
-            }
-            return `${minutes || '0'}:${seconds.padStart(2, '0')}`;
-        }
+  <div class="toast" id="toast"></div>
+</div>
 
-        async function loadPlaylist() {
-            playlistId = getPlaylistId();
-            
-            if (!playlistId) {
-                document.getElementById('loading').innerHTML = '<p style="color: #ff6b6b;">Playlist ID bulunamadı</p>';
-                return;
-            }
+<!-- Hidden YouTube IFrame API player -->
+<div id="yt-frame"></div>
 
-            console.log('Loading playlist:', playlistId); // Debug için
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
 
-            try {
-                // Playlist bilgisi
-                const playlistUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`;
-                console.log('Fetching URL:', playlistUrl);
-                
-                const playlistRes = await fetch(playlistUrl);
-                const playlistData = await playlistRes.json();
+let playlist   = [];
+let currentIdx = 0;
+let ytPlayer   = null;
+let isPlaying  = false;
+let isReady    = false;
+let progressTimer = null;
 
-                console.log('Response status:', playlistRes.status);
-                console.log('Playlist data:', playlistData);
+// ── Size mode ────────────────────────────────────────────────────────────────
+const params   = new URLSearchParams(window.location.search);
+const sizeMode = params.get('size') || 'full';
+document.body.className = `size-${sizeMode}`;
 
-                // API error kontrolü
-                if (playlistData.error) {
-                    throw new Error(`API Error: ${playlistData.error.message} (${playlistData.error.code})`);
-                }
+// Auto-show panel only in full mode
+let panelVisible = sizeMode === 'full';
+if (!panelVisible) document.getElementById('panel').style.display = 'none';
 
-                if (!playlistData.items || playlistData.items.length === 0) {
-                    throw new Error('Playlist bulunamadı - items boş');
-                }
+// ── YouTube IFrame API ───────────────────────────────────────────────────────
+const tag = document.createElement('script');
+tag.src   = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(tag);
 
-                const playlistInfo = playlistData.items[0].snippet;
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('yt-frame', {
+    height: '1', width: '1',
+    playerVars: { autoplay: 0, controls: 0, rel: 0 },
+    events: {
+      onReady:       onPlayerReady,
+      onStateChange: onPlayerStateChange,
+    }
+  });
+}
 
-                // Tüm videoları çek
-                let allVideos = [];
-                let nextPageToken = '';
+function onPlayerReady() {
+  isReady = true;
+  const hash = window.location.hash.slice(1);
+  if (hash) loadPlaylist(hash);
+  else hideOverlay();
+}
 
-                do {
-                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
-                    const response = await fetch(url);
-                    const data = await response.json();
+function onPlayerStateChange(e) {
+  const S = YT.PlayerState;
+  if (e.data === S.PLAYING) {
+    setPlaying(true);
+    startProgress();
+  } else if (e.data === S.PAUSED) {
+    setPlaying(false);
+    stopProgress();
+  } else if (e.data === S.ENDED) {
+    nextTrack();
+  }
+}
 
-                    allVideos = allVideos.concat(data.items);
-                    nextPageToken = data.nextPageToken;
-                } while (nextPageToken);
+// ── Playlist loader ──────────────────────────────────────────────────────────
+async function loadPlaylist(id) {
+  if (!id) return;
+  if (!id.startsWith('PL')) id = 'PL' + id;
 
-                // Video detayları
-                const videoIds = allVideos
-                    .filter(item => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
-                    .map(item => item.snippet.resourceId.videoId)
-                    .join(',');
+  showOverlay('Playlist yükleniyor...');
 
-                const detailsRes = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${videoIds}&key=${API_KEY}`
-                );
-                const detailsData = await detailsRes.json();
+  try {
+    // Playlist bilgisi
+    const plRes  = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${id}&key=${API_KEY}`);
+    const plData = await plRes.json();
+    if (!plData.items?.length) throw new Error('Playlist bulunamadı');
 
-                playlist = allVideos
-                    .filter(item => item.snippet.title !== 'Private video' && item.snippet.title !== 'Deleted video')
-                    .map(item => {
-                        const details = detailsData.items.find(d => d.id === item.snippet.resourceId.videoId);
-                        return {
-                            videoId: item.snippet.resourceId.videoId,
-                            title: item.snippet.title,
-                            thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-                            channel: item.snippet.channelTitle,
-                            duration: details ? formatDuration(details.contentDetails.duration) : 'N/A'
-                        };
-                    });
+    const plInfo  = plData.items[0].snippet;
+    const plCount = plData.items[0].contentDetails.itemCount;
 
-                // UI'ı güncelle
-                document.getElementById('playlistTitle').textContent = playlistInfo.title;
-                document.getElementById('playlistMeta').textContent = `${playlist.length} video • ${playlistInfo.channelTitle}`;
+    // Videoları çek
+    let allItems = [], pageToken = '';
+    do {
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${id}&key=${API_KEY}${pageToken ? '&pageToken='+pageToken : ''}`);
+      const d = await r.json();
+      if (d.error) throw new Error(d.error.message);
+      allItems = allItems.concat(d.items || []);
+      pageToken = d.nextPageToken || '';
+    } while (pageToken);
 
-                renderPlaylist();
-                playVideo(0);
+    // Video detayları
+    const ids     = allItems.filter(i => i.snippet.title !== 'Private video' && i.snippet.title !== 'Deleted video').map(i => i.snippet.resourceId.videoId);
+    const detRes  = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${ids.join(',')}&key=${API_KEY}`);
+    const detData = await detRes.json();
+    const detMap  = {};
+    detData.items?.forEach(v => detMap[v.id] = v);
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('player').style.display = 'flex';
+    playlist = ids.map(vid => {
+      const item = allItems.find(i => i.snippet.resourceId.videoId === vid);
+      const det  = detMap[vid];
+      return {
+        videoId:   vid,
+        title:     item.snippet.title,
+        channel:   item.snippet.channelTitle,
+        thumbnail: det?.snippet?.thumbnails?.medium?.url || item.snippet.thumbnails?.medium?.url || '',
+        duration:  det ? parseDuration(det.contentDetails.duration) : '',
+      };
+    });
 
-            } catch (error) {
-                console.error('Hata:', error);
-                document.getElementById('loading').innerHTML = `
-                    <p style="color: #ff6b6b;">Hata: ${error.message}</p>
-                    <p style="font-size: 12px; margin-top: 8px;">Playlist ID: ${playlistId}</p>
-                `;
-            }
-        }
+    document.getElementById('panelTitle').textContent  = plInfo.title;
+    document.getElementById('panelCount').textContent  = `${playlist.length} video`;
 
-        function renderPlaylist() {
-            const listEl = document.getElementById('videoList');
-            listEl.innerHTML = playlist.map((video, index) => `
-                <div class="video-item ${index === currentIndex ? 'active' : ''}" onclick="playVideo(${index})">
-                    <img src="${video.thumbnail}" alt="${video.title}" class="video-thumb">
-                    <div class="video-info">
-                        <div class="video-title">${video.title}</div>
-                        <div class="video-meta">${video.channel} • ${video.duration}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
+    renderList();
+    playTrack(0);
+    hideOverlay();
 
-        function playVideo(index) {
-            currentIndex = index;
-            const video = playlist[index];
-            
-            document.getElementById('videoFrame').src = 
-                `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
-            
-            renderPlaylist();
-        }
+    // postMessage to parent
+    postOut({ type: 'playlistLoaded', title: plInfo.title, count: playlist.length });
 
-        // Sayfa yüklendiğinde playlist'i yükle
-        window.addEventListener('DOMContentLoaded', loadPlaylist);
-    </script>
+  } catch (err) {
+    showOverlay(err.message, false);
+  }
+}
+
+// ── Playback ─────────────────────────────────────────────────────────────────
+function playTrack(idx) {
+  if (!playlist.length || idx < 0 || idx >= playlist.length) return;
+  currentIdx = idx;
+  const track = playlist[idx];
+
+  if (isReady && ytPlayer) {
+    ytPlayer.loadVideoById(track.videoId);
+  }
+
+  // Update bar
+  document.getElementById('barThumb').src     = track.thumbnail;
+  document.getElementById('barTitle').textContent   = track.title;
+  document.getElementById('barChannel').textContent = track.channel;
+
+  // Thumb pulse
+  const thumb = document.getElementById('barThumb');
+  thumb.classList.remove('pulse');
+  void thumb.offsetWidth;
+  thumb.classList.add('pulse');
+
+  // Ambient color from thumbnail
+  updateAmbient(track.thumbnail);
+
+  renderList();
+
+  postOut({ type: 'trackChange', index: idx, title: track.title, channel: track.channel, thumbnail: track.thumbnail });
+}
+
+function togglePlay() {
+  if (!ytPlayer || !isReady) return;
+  if (isPlaying) ytPlayer.pauseVideo();
+  else           ytPlayer.playVideo();
+}
+
+function prevTrack() {
+  if (currentIdx > 0) playTrack(currentIdx - 1);
+}
+
+function nextTrack() {
+  if (currentIdx < playlist.length - 1) playTrack(currentIdx + 1);
+}
+
+function setPlaying(val) {
+  isPlaying = val;
+  document.getElementById('iconPlay').style.display  = val ? 'none' : '';
+  document.getElementById('iconPause').style.display = val ? '' : 'none';
+  document.getElementById('panel').classList.toggle('paused', !val);
+  postOut({ type: 'stateChange', playing: val });
+}
+
+// ── Progress ─────────────────────────────────────────────────────────────────
+function startProgress() {
+  stopProgress();
+  progressTimer = setInterval(() => {
+    if (!ytPlayer || !isReady) return;
+    const dur = ytPlayer.getDuration() || 0;
+    const cur = ytPlayer.getCurrentTime() || 0;
+    const pct = dur > 0 ? (cur / dur) * 100 : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    postOut({ type: 'progress', current: Math.floor(cur), duration: Math.floor(dur), percent: pct });
+  }, 1000);
+}
+function stopProgress() {
+  clearInterval(progressTimer);
+}
+
+// ── Panel toggle ─────────────────────────────────────────────────────────────
+function togglePanel() {
+  panelVisible = !panelVisible;
+  document.getElementById('panel').style.display = panelVisible ? '' : 'none';
+  document.getElementById('expandIcon').style.transform = panelVisible ? 'rotate(180deg)' : '';
+}
+
+// ── Render list ──────────────────────────────────────────────────────────────
+function renderList() {
+  const el = document.getElementById('panelList');
+  el.innerHTML = playlist.map((t, i) => `
+    <div class="track-item ${i === currentIdx ? 'active' : ''}" onclick="playTrack(${i})">
+      <div class="track-num">
+        <span class="track-num-val">${i + 1}</span>
+        <div class="track-playing">
+          <div class="bar-wave"></div>
+          <div class="bar-wave"></div>
+          <div class="bar-wave"></div>
+        </div>
+      </div>
+      <img class="track-thumb" src="${t.thumbnail}" alt="">
+      <div class="track-info">
+        <div class="track-name">${escHtml(t.title)}</div>
+        <div class="track-ch">${escHtml(t.channel)}</div>
+      </div>
+      <div class="track-dur">${t.duration}</div>
+    </div>
+  `).join('');
+
+  // Scroll active into view
+  const active = el.querySelector('.active');
+  if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+// ── Ambient ──────────────────────────────────────────────────────────────────
+function updateAmbient(imgUrl) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 8; c.height = 8;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 8, 8);
+    const d = ctx.getImageData(0, 0, 8, 8).data;
+    let r=0,g=0,b=0,n=d.length/4;
+    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
+    r=Math.floor(r/n); g=Math.floor(g/n); b=Math.floor(b/n);
+    document.getElementById('ambient').style.background =
+      `radial-gradient(ellipse 80% 60% at 50% 0%, rgb(${r},${g},${b}), transparent)`;
+  };
+  img.src = imgUrl;
+}
+
+// ── postMessage API ───────────────────────────────────────────────────────────
+function postOut(data) {
+  try { window.parent.postMessage({ source: 'ytembed', ...data }, '*'); } catch(e) {}
+}
+
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.target !== 'ytembed') return;
+
+  switch(d.type) {
+    case 'play':       ytPlayer?.playVideo();  break;
+    case 'pause':      ytPlayer?.pauseVideo(); break;
+    case 'toggle':     togglePlay();           break;
+    case 'next':       nextTrack();            break;
+    case 'prev':       prevTrack();            break;
+    case 'setTrack':   playTrack(d.index);     break;
+    case 'load':       loadPlaylist(d.id);     break;
+    case 'seek':       ytPlayer?.seekTo(d.seconds, true); break;
+    case 'volume':     ytPlayer?.setVolume(d.value);      break;
+    case 'getState':
+      postOut({ type: 'state', playing: isPlaying, index: currentIdx, count: playlist.length });
+      break;
+  }
+});
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function parseDuration(iso) {
+  const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+  if (!m) return '';
+  const h = m[1]||0, mn = m[2]||0, s = m[3]||0;
+  return h > 0
+    ? `${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${mn}:${String(s).padStart(2,'0')}`;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showOverlay(msg, spinner=true) {
+  document.getElementById('stateOverlay').classList.remove('hidden');
+  document.getElementById('spinner').style.display = spinner ? '' : 'none';
+  document.getElementById('stateMsg').textContent  = msg;
+}
+
+function hideOverlay() {
+  document.getElementById('stateOverlay').classList.add('hidden');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+</script>
 </body>
 </html>
