@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YTEmbed Remote</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #111;
+    --surface: #1a1a1a;
+    --surface2: #232323;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8e8e8;
+    --text-dim: #555;
+    --accent: #1ed760;
+    --accent-dim: rgba(30,215,96,0.12);
+    --red: #e84040;
+    --radius: 14px;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  /* ── Header ─────────────────────────────────── */
+  .header {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+  }
+  .logo-dot.offline { background: var(--text-dim); box-shadow: none; }
+
+  .conn-label {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Load bar ───────────────────────────────── */
+  .load-row {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .load-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .load-input:focus { border-color: rgba(255,255,255,0.15); }
+  .load-input::placeholder { color: var(--text-dim); }
+
+  .load-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .load-btn:hover { background: #22e865; }
+
+  /* ── Now playing card ───────────────────────── */
+  .now-playing {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .now-ambient {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background: radial-gradient(ellipse 120% 80% at 0% 50%, var(--thumb-color, #1ed760), transparent);
+    pointer-events: none;
+    transition: background 1s ease;
+  }
+
+  .now-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+    position: relative;
+    z-index: 1;
+  }
+
+  .now-info {
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .now-label {
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .now-title {
+    font-size: 15px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .now-channel {
+    font-size: 12px;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Progress ───────────────────────────────── */
+  .progress-wrap {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    overflow: visible;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.8s linear;
+    position: relative;
+  }
+
+  .progress-fill::after {
+    content: '';
+    position: absolute;
+    right: -5px; top: -4px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .progress-bar:hover .progress-fill::after { opacity: 1; }
+
+  .progress-times {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Controls ───────────────────────────────── */
+  .controls {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn {
+    border: none;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+
+  .btn-sm {
+    width: 36px; height: 36px;
+    font-size: 16px;
+  }
+  .btn-sm:hover { color: var(--text); background: var(--surface); }
+
+  .btn-play {
+    width: 52px; height: 52px;
+    background: var(--text);
+    color: #000;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .btn-play:hover { background: #fff; transform: scale(1.05); }
+  .btn-play.playing { background: var(--accent); }
+  .btn-play.playing:hover { background: #22e865; }
+
+  /* ── Volume ─────────────────────────────────── */
+  .volume-row {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .vol-icon { color: var(--text-dim); font-size: 13px; flex-shrink: 0; }
+
+  .vol-slider {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .vol-slider:hover::-webkit-slider-thumb { background: var(--accent); }
+
+  /* ── Playlist ───────────────────────────────── */
+  .section-label {
+    width: 100%;
+    max-width: 480px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0 2px;
+  }
+
+  .track-list {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .track-list::-webkit-scrollbar { width: 4px; }
+  .track-list::-webkit-scrollbar-track { background: transparent; }
+  .track-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+  .track-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .track-row:hover { background: var(--surface); }
+  .track-row.active { background: var(--accent-dim); }
+
+  .track-n {
+    width: 18px;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .track-row.active .track-n { color: var(--accent); }
+
+  .track-img {
+    width: 36px; height: 36px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--surface2);
+  }
+
+  .track-meta { flex: 1; min-width: 0; }
+  .t-name {
+    font-size: 12px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .track-row.active .t-name { color: var(--accent); }
+  .t-ch {
+    font-size: 11px; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .t-dur { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+
+  /* ── Embed preview ──────────────────────────── */
+  .embed-preview {
+    width: 100%;
+    max-width: 480px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    display: none;
+  }
+  .embed-preview.visible { display: block; }
+  .embed-preview iframe { display: block; width: 100%; border: none; }
+
+  .preview-toggle {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.15s;
+  }
+  .preview-toggle:hover { color: var(--text); border-color: rgba(255,255,255,0.12); }
+
+  /* ── Status dot ─────────────────────────────── */
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    flex-shrink: 0;
+  }
+  .status-dot.live { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: blink 2s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+  /* ── Divider ────────────────────────────────── */
+  .divider {
+    width: 100%;
+    max-width: 480px;
+    height: 1px;
+    background: var(--border);
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-dot offline" id="connDot"></div>
+    YTEmbed Remote
+  </div>
+  <span class="conn-label" id="connLabel">Bağlı değil</span>
+</div>
+
+<!-- Load bar -->
+<div class="load-row">
+  <input class="load-input" id="loadInput" placeholder="YouTube Playlist URL veya ID..." />
+  <button class="load-btn" onclick="sendLoad()">Yükle</button>
+</div>
+
+<!-- Now playing -->
+<div class="now-playing">
+  <div class="now-ambient" id="nowAmbient"></div>
+  <img class="now-thumb" id="nowThumb" src="" alt="">
+  <div class="now-info">
+    <div class="now-label">ŞU AN ÇALINIYOR</div>
+    <div class="now-title" id="nowTitle">—</div>
+    <div class="now-channel" id="nowChannel">Playlist yüklenmedi</div>
+  </div>
+</div>
+
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="progress-times">
+    <span id="timeCur">0:00</span>
+    <span id="timeDur">0:00</span>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn btn-sm" onclick="send('prev')" title="Önceki">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+  </button>
+  <button class="btn btn-play" id="btnPlay" onclick="send('toggle')" title="Oynat/Durdur">
+    <svg id="iconPlay" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    <svg id="iconPause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </button>
+  <button class="btn btn-sm" onclick="send('next')" title="Sonraki">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+  </button>
+</div>
+
+<!-- Volume -->
+<div class="volume-row">
+  <span class="vol-icon">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+  </span>
+  <input class="vol-slider" type="range" min="0" max="100" value="80" id="volSlider" oninput="sendVolume(this.value)">
+</div>
+
+<div class="divider"></div>
+
+<!-- Embed preview toggle -->
+<button class="preview-toggle" onclick="togglePreview()">
+  <span id="previewLabel">Embed önizlemesini göster</span>
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" id="previewChevron"><path d="M7 10l5 5 5-5z"/></svg>
+</button>
+
+<div class="embed-preview" id="embedPreview">
+  <iframe id="embedFrame" src="" height="352" scrolling="no" allowfullscreen></iframe>
+</div>
+
+<div class="divider"></div>
+
+<span class="section-label" id="listLabel">Playlist — 0 video</span>
+
+<div class="track-list" id="trackList"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let playlist   = [];
+let currentIdx = 0;
+let isPlaying  = false;
+let totalDur   = 0;
+let curTime    = 0;
+let connected  = false;
+let embedFrame = null;
+let previewOpen = false;
+let currentPlaylistId = '';
+
+// ── Connect to embed ──────────────────────────────────────────────────────────
+window.addEventListener('message', e => {
+  const d = e.data;
+  if (!d || d.source !== 'ytembed') return;
+
+  if (!connected) setConnected(true);
+
+  switch (d.type) {
+    case 'playlistLoaded':
+      document.getElementById('listLabel').textContent = `${d.title} — ${d.count} video`;
+      break;
+
+    case 'trackChange':
+      currentIdx = d.index;
+      document.getElementById('nowTitle').textContent   = d.title;
+      document.getElementById('nowChannel').textContent = d.channel;
+      if (d.thumbnail) {
+        document.getElementById('nowThumb').src = d.thumbnail;
+        updateAmbient(d.thumbnail);
+      }
+      renderList();
+      break;
+
+    case 'stateChange':
+      isPlaying = d.playing;
+      document.getElementById('iconPlay').style.display  = isPlaying ? 'none' : '';
+      document.getElementById('iconPause').style.display = isPlaying ? '' : 'none';
+      document.getElementById('btnPlay').classList.toggle('playing', isPlaying);
+      break;
+
+    case 'progress':
+      curTime  = d.current;
+      totalDur = d.duration;
+      document.getElementById('progressFill').style.width = d.percent + '%';
+      document.getElementById('timeCur').textContent = fmtTime(d.current);
+      document.getElementById('timeDur').textContent = fmtTime(d.duration);
+      break;
+
+    case 'state':
+      currentIdx = d.index;
+      isPlaying  = d.playing;
+      renderList();
+      break;
+  }
+});
+
+function setConnected(val) {
+  connected = val;
+  document.getElementById('connDot').className   = 'logo-dot' + (val ? ' live' : ' offline');
+  document.getElementById('connLabel').textContent = val ? 'Bağlı' : 'Bağlı değil';
+}
+
+// ── Send commands ─────────────────────────────────────────────────────────────
+function send(type, extra={}) {
+  postToEmbed({ target: 'ytembed', type, ...extra });
+}
+
+function sendLoad() {
+  const raw = document.getElementById('loadInput').value.trim();
+  if (!raw) return;
+
+  let id = raw;
+  try {
+    const url = new URL(raw.includes('://') ? raw : 'https://youtube.com/playlist?list=' + raw);
+    id = url.searchParams.get('list') || raw;
+  } catch(e) {}
+
+  if (!id.startsWith('PL')) id = 'PL' + id;
+  currentPlaylistId = id;
+
+  // Update embed iframe src if preview open
+  if (previewOpen) {
+    document.getElementById('embedFrame').src = embedSrc(id);
+  }
+
+  send('load', { id });
+  setConnected(true);
+}
+
+function sendVolume(v) {
+  send('volume', { value: parseInt(v) });
+}
+
+function seekTo(e) {
+  if (!totalDur) return;
+  const bar = document.getElementById('progressBar');
+  const pct = e.offsetX / bar.offsetWidth;
+  const sec = Math.floor(pct * totalDur);
+  send('seek', { seconds: sec });
+}
+
+function postToEmbed(data) {
+  // To inline iframe
+  const frame = document.getElementById('embedFrame');
+  if (frame && frame.contentWindow) {
+    frame.contentWindow.postMessage(data, '*');
+  }
+  // To any parent/sibling that might host the embed
+  window.parent.postMessage(data, '*');
+  // Broadcast to all frames
+  if (window.frames) {
+    for (let i = 0; i < window.frames.length; i++) {
+      try { window.frames[i].postMessage(data, '*'); } catch(e) {}
+    }
+  }
+}
+
+// ── Preview toggle ────────────────────────────────────────────────────────────
+function togglePreview() {
+  previewOpen = !previewOpen;
+  const preview = document.getElementById('embedPreview');
+  const label   = document.getElementById('previewLabel');
+  const chevron = document.getElementById('previewChevron');
+
+  preview.classList.toggle('visible', previewOpen);
+  label.textContent = previewOpen ? 'Embed önizlemesini gizle' : 'Embed önizlemesini göster';
+  chevron.style.transform = previewOpen ? 'rotate(180deg)' : '';
+
+  if (previewOpen && currentPlaylistId) {
+    document.getElementById('embedFrame').src = embedSrc(currentPlaylistId);
+    embedFrame = document.getElementById('embedFrame');
+  }
+}
+
+function embedSrc(id) {
+  return `embed.html#${id}`;
+}
+
+// ── Track list ────────────────────────────────────────────────────────────────
+function renderList() {
+  if (!playlist.length) return;
+  const el = document.getElementById('trackList');
+  el.innerHTML = playlist.map((t, i) => `
+    <div class="track-row ${i === currentIdx ? 'active' : ''}" onclick="playAt(${i})">
+      <div class="track-n">${i + 1}</div>
+      <img class="track-img" src="${t.thumbnail}" alt="">
+      <div class="track-meta">
+        <div class="t-name">${escHtml(t.title)}</div>
+        <div class="t-ch">${escHtml(t.channel)}</div>
+      </div>
+      <div class="t-dur">${t.duration}</div>
+    </div>
+  `).join('');
+}
+
+function playAt(idx) {
+  send('setTrack', { index: idx });
+}
+
+// ── Ambient ───────────────────────────────────────────────────────────────────
+function updateAmbient(imgUrl) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 8; c.height = 8;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0, 8, 8);
+    const d = ctx.getImageData(0, 0, 8, 8).data;
+    let r=0,g=0,b=0,n=d.length/4;
+    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
+    r=Math.floor(r/n); g=Math.floor(g/n); b=Math.floor(b/n);
+    document.getElementById('nowAmbient').style.background =
+      `radial-gradient(ellipse 120% 80% at 0% 50%, rgb(${r},${g},${b}), transparent)`;
+  };
+  img.src = imgUrl;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function fmtTime(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function escHtml(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Auto-request state from embed after load
+setTimeout(() => send('getState'), 1000);
+</script>
+</body>
+</html>
