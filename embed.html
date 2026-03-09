@@ -3,463 +3,449 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>YTEmbed Player</title>
+<title>YTEmbed</title>
+<meta name="description" content="YouTube Playlist Player">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap');
+/* ══════════════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════════════ */
+:root {
+  --bg:         #0a0a0a;
+  --surface:    #141414;
+  --surface2:   #1e1e1e;
+  --border:     rgba(255,255,255,0.06);
+  --text:       #e8e8e8;
+  --text-dim:   #666;
+  --accent:     #1ed760;
+  --accent-dim: rgba(30,215,96,0.14);
+  --radius:     12px;
+}
 
-  :root {
-    --bg: #0a0a0a;
-    --surface: #141414;
-    --surface2: #1e1e1e;
-    --border: rgba(255,255,255,0.06);
-    --text: #e8e8e8;
-    --text-dim: #666;
-    --accent: #1ed760;
-    --accent-dim: rgba(30,215,96,0.15);
-    --radius: 12px;
-  }
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:var(--bg); font-family:'DM Sans',sans-serif; color:var(--text); }
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+/* ══════════════════════════════════════════════════════════
+   SHARED — ambient glow
+══════════════════════════════════════════════════════════ */
+.ambient {
+  position:absolute; inset:0; pointer-events:none; z-index:0; opacity:0.07;
+  background: radial-gradient(ellipse 80% 50% at 50% 0%, #1ed760, transparent);
+  transition: background 1.4s ease;
+}
 
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    font-family: 'DM Sans', sans-serif;
-    color: var(--text);
-    overflow: hidden;
-  }
+/* ══════════════════════════════════════════════════════════
+   SHARED — compact bar
+══════════════════════════════════════════════════════════ */
+.bar {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px; height:80px; flex-shrink:0;
+  position:relative; z-index:1;
+}
+.bar-thumb {
+  width:52px; height:52px; border-radius:6px;
+  object-fit:cover; flex-shrink:0; background:var(--surface2);
+  transition:transform 0.3s;
+}
+.bar-thumb.pulse { animation:thumbPulse 0.4s ease; }
+@keyframes thumbPulse { 0%{transform:scale(1)} 50%{transform:scale(0.93)} 100%{transform:scale(1)} }
+.bar-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.bar-title   { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar-channel { font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.bar-prog    { height:2px; background:var(--surface2); border-radius:2px; margin-top:6px; overflow:hidden; }
+.bar-prog-fill { height:100%; background:var(--accent); border-radius:2px; width:0%; transition:width 1s linear; }
 
-  /* ── SIZE MODES ─────────────────────────────── */
-  .player {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-    position: relative;
-  }
+.bar-ctrls { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.ctrl-btn {
+  width:32px; height:32px; border-radius:50%; border:none;
+  background:transparent; color:var(--text-dim); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s;
+}
+.ctrl-btn:hover { color:var(--text); background:var(--surface2); }
+.ctrl-btn.play { width:36px; height:36px; background:var(--accent); color:#000; }
+.ctrl-btn.play:hover { background:#22e865; transform:scale(1.06); }
+.expand-btn {
+  width:28px; height:28px; border-radius:6px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-dim); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all 0.15s; margin-left:4px;
+}
+.expand-btn:hover { color:var(--text); border-color:rgba(255,255,255,0.15); }
 
-  /* ── AMBIENT GLOW ──────────────────────────── */
-  .ambient {
-    position: absolute;
-    inset: 0;
-    opacity: 0.07;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, var(--thumb-color, #1ed760), transparent);
-    pointer-events: none;
-    transition: background 1.2s ease;
-    z-index: 0;
-  }
+/* ══════════════════════════════════════════════════════════
+   SHARED — playlist panel
+══════════════════════════════════════════════════════════ */
+.panel {
+  flex:1; display:flex; flex-direction:column;
+  overflow:hidden; border-top:1px solid var(--border);
+  position:relative; z-index:1;
+}
+.panel-header {
+  padding:12px 14px 8px; display:flex;
+  align-items:center; justify-content:space-between; flex-shrink:0;
+}
+.panel-title { font-size:11px; font-weight:600; color:var(--text-dim); text-transform:uppercase; letter-spacing:.08em; }
+.panel-count { font-size:11px; color:var(--text-dim); }
+.panel-list  { flex:1; overflow-y:auto; padding:0 8px 8px; }
+.panel-list::-webkit-scrollbar { width:4px; }
+.panel-list::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:4px; }
 
-  /* ── COMPACT BAR (80px) ────────────────────── */
-  .bar {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    height: 80px;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-  }
+/* Track rows */
+.track-item {
+  display:flex; align-items:center; gap:10px;
+  padding:6px 8px; border-radius:8px; cursor:pointer;
+  transition:background 0.15s;
+}
+.track-item:hover  { background:var(--surface2); }
+.track-item.active { background:var(--accent-dim); }
+.track-num { width:20px; font-size:11px; color:var(--text-dim); text-align:center; flex-shrink:0; }
+.track-item.active .track-num-val { display:none; }
+.track-item.active .track-num     { color:var(--accent); }
+.track-playing { display:none; align-items:center; gap:2px; width:20px; justify-content:center; }
+.track-item.active .track-playing { display:flex; }
+.bwave { width:3px; background:var(--accent); border-radius:2px; animation:wave .8s ease-in-out infinite alternate; }
+.bwave:nth-child(1){height:10px}.bwave:nth-child(2){animation-delay:.2s;height:8px}.bwave:nth-child(3){animation-delay:.4s;height:5px}
+@keyframes wave { from{transform:scaleY(.4)} to{transform:scaleY(1)} }
+.panel.paused .bwave { animation-play-state:paused; }
+.track-thumb { width:36px; height:36px; border-radius:4px; object-fit:cover; flex-shrink:0; background:var(--surface2); }
+.track-info  { flex:1; min-width:0; }
+.track-name  { font-size:12px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.track-item.active .track-name { color:var(--accent); }
+.track-ch  { font-size:11px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.track-dur { font-size:11px; color:var(--text-dim); flex-shrink:0; }
 
-  .bar-thumb {
-    width: 52px;
-    height: 52px;
-    border-radius: 6px;
-    object-fit: cover;
-    flex-shrink: 0;
-    background: var(--surface2);
-    transition: transform 0.3s ease;
-  }
-  .bar-thumb.pulse { animation: thumbPulse 0.4s ease; }
-  @keyframes thumbPulse {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(0.93); }
-    100% { transform: scale(1); }
-  }
+/* ══════════════════════════════════════════════════════════
+   SHARED — overlay
+══════════════════════════════════════════════════════════ */
+.overlay {
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px;
+  background:var(--bg); z-index:20;
+}
+.overlay.hidden { display:none; }
+.spinner { width:28px; height:28px; border:2px solid var(--surface2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.overlay-msg { font-size:12px; color:var(--text-dim); }
 
-  .bar-info {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+/* ══════════════════════════════════════════════════════════
+   IFRAME MODE (default)
+   embed.html açıldığında iframe içinde ise bu layout
+══════════════════════════════════════════════════════════ */
+body.embed-mode {
+  overflow:hidden;
+}
+body.embed-mode .root {
+  width:100%; height:100%;
+  display:flex; flex-direction:column;
+  background:var(--bg);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden; position:relative;
+}
+body.embed-mode .standalone-only { display:none !important; }
 
-  .bar-title {
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: var(--text);
-  }
+/* size variants */
+body.embed-mode.size-compact .panel { display:none; }
+body.embed-mode.size-normal  .panel { display:none; }
+body.embed-mode.size-full    .bar   { border-bottom:1px solid var(--border); }
 
-  .bar-channel {
-    font-size: 11px;
-    color: var(--text-dim);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
+/* hidden YT player */
+#yt-bg {
+  position:absolute; width:1px; height:1px;
+  top:-9999px; left:-9999px; pointer-events:none; visibility:hidden;
+}
 
-  /* Progress micro bar */
-  .bar-progress {
-    height: 2px;
-    background: var(--surface2);
-    border-radius: 2px;
-    margin-top: 6px;
-    overflow: hidden;
-  }
-  .bar-progress-fill {
-    height: 100%;
-    background: var(--accent);
-    border-radius: 2px;
-    width: 0%;
-    transition: width 1s linear;
-  }
+/* ══════════════════════════════════════════════════════════
+   STANDALONE MODE
+   Direkt tarayıcıda açıldığında tam sayfa player
+══════════════════════════════════════════════════════════ */
+body.standalone-mode {
+  overflow-y:auto;
+}
+body.standalone-mode .root {
+  width:100%; min-height:100vh;
+  display:flex; flex-direction:column;
+  border:none; border-radius:0; position:relative;
+}
+body.standalone-mode .embed-only { display:none !important; }
 
-  /* Controls */
-  .bar-controls {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
+/* Video stage */
+.video-stage {
+  display:none;
+  width:100%; background:#000; position:relative; flex-shrink:0;
+}
+.video-stage::after { content:''; display:block; padding-bottom:56.25%; }
+body.standalone-mode .video-stage { display:block; }
 
-  .ctrl-btn {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s ease;
-    font-size: 14px;
-  }
-  .ctrl-btn:hover { color: var(--text); background: var(--surface2); }
-  .ctrl-btn.play-btn {
-    width: 36px; height: 36px;
-    background: var(--accent);
-    color: #000;
-  }
-  .ctrl-btn.play-btn:hover { background: #22e865; transform: scale(1.06); }
+#yt-player-visible {
+  position:absolute; inset:0; width:100%; height:100%;
+  border:none;
+}
 
-  .expand-btn {
-    width: 28px; height: 28px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: all 0.15s ease;
-    font-size: 11px;
-    margin-left: 4px;
+/* Standalone info (below video on mobile, sidebar on desktop) */
+.standalone-info {
+  display:none;
+  padding:18px 24px 12px;
+  background: linear-gradient(180deg, var(--surface) 0%, transparent 100%);
+  flex-shrink:0;
+}
+body.standalone-mode .standalone-info { display:block; }
+
+.si-title   { font-size:20px; font-weight:700; line-height:1.3; margin-bottom:5px; }
+.si-channel { font-size:13px; color:var(--text-dim); margin-bottom:12px; }
+.si-actions { display:flex; gap:8px; flex-wrap:wrap; }
+.si-btn {
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--surface2); border:1px solid var(--border);
+  color:var(--text); font-family:'DM Sans',sans-serif;
+  font-size:12px; font-weight:500; padding:6px 14px;
+  border-radius:99px; cursor:pointer; text-decoration:none;
+  transition:all 0.15s;
+}
+.si-btn:hover { border-color:rgba(255,255,255,0.15); background:#252525; }
+.si-btn.yt    { color:#ff4e4e; border-color:rgba(255,78,78,0.2); }
+.si-btn.yt:hover { background:rgba(255,78,78,0.08); }
+
+/* Standalone: bar is a secondary control strip, panel expands below */
+body.standalone-mode .bar {
+  height:auto; padding:14px 20px;
+  border-top:1px solid var(--border);
+}
+body.standalone-mode .panel { max-height:50vh; }
+body.standalone-mode .panel-list { padding:0 14px 14px; }
+body.standalone-mode .track-item { padding:7px 10px; }
+body.standalone-mode .track-thumb { width:40px; height:40px; }
+body.standalone-mode .track-name { font-size:13px; }
+
+/* Wide layout: video left, info+list right */
+@media (min-width:900px) {
+  body.standalone-mode .root { flex-direction:column; }
+
+  .sa-layout {
+    display:flex; flex-direction:row; align-items:flex-start;
   }
-  .expand-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
-
-  /* ── PLAYLIST PANEL ────────────────────────── */
-  .panel {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border-top: 1px solid var(--border);
-    position: relative;
-    z-index: 1;
+  body.standalone-mode .video-stage {
+    flex:1; min-width:0;
   }
+  body.standalone-mode .video-stage::after { padding-bottom:56.25%; }
 
-  .panel-header {
-    padding: 12px 14px 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
+  .sa-sidebar {
+    width:340px; flex-shrink:0;
+    background:var(--surface);
+    display:flex; flex-direction:column;
+    min-height:100%;
   }
-
-  .panel-title {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  body.standalone-mode .standalone-info {
+    background:none;
+    padding:20px 18px 14px;
   }
+  body.standalone-mode .bar { border-top:none; border-bottom:1px solid var(--border); padding:12px 16px; }
+  body.standalone-mode .panel { max-height:none; flex:1; }
+  body.standalone-mode .panel-list { padding:0 12px 12px; }
+}
 
-  .panel-count {
-    font-size: 11px;
-    color: var(--text-dim);
-  }
-
-  .panel-list {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 8px 8px;
-  }
-
-  .panel-list::-webkit-scrollbar { width: 4px; }
-  .panel-list::-webkit-scrollbar-track { background: transparent; }
-  .panel-list::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
-
-  .track-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.15s ease;
-  }
-  .track-item:hover { background: var(--surface2); }
-  .track-item.active { background: var(--accent-dim); }
-
-  .track-num {
-    width: 20px;
-    font-size: 11px;
-    color: var(--text-dim);
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .track-item.active .track-num { color: var(--accent); }
-
-  .track-playing {
-    display: none;
-    align-items: center;
-    gap: 2px;
-    width: 20px;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .track-item.active .track-playing { display: flex; }
-  .track-item.active .track-num-val { display: none; }
-
-  .bar-wave {
-    width: 3px;
-    background: var(--accent);
-    border-radius: 2px;
-    animation: wave 0.8s ease-in-out infinite alternate;
-  }
-  .bar-wave:nth-child(2) { animation-delay: 0.2s; height: 8px; }
-  .bar-wave:nth-child(3) { animation-delay: 0.4s; height: 5px; }
-  .bar-wave:nth-child(1) { height: 10px; }
-  @keyframes wave {
-    from { transform: scaleY(0.4); }
-    to   { transform: scaleY(1); }
-  }
-  .paused .bar-wave { animation-play-state: paused; }
-
-  .track-thumb {
-    width: 36px;
-    height: 36px;
-    border-radius: 4px;
-    object-fit: cover;
-    flex-shrink: 0;
-    background: var(--surface2);
-  }
-
-  .track-info {
-    flex: 1;
-    min-width: 0;
-  }
-  .track-name {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .track-item.active .track-name { color: var(--accent); }
-  .track-ch {
-    font-size: 11px;
-    color: var(--text-dim);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .track-dur {
-    font-size: 11px;
-    color: var(--text-dim);
-    flex-shrink: 0;
-  }
-
-  /* ── LOADING / EMPTY ───────────────────────── */
-  .state-overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    background: var(--bg);
-    z-index: 10;
-  }
-  .state-overlay.hidden { display: none; }
-
-  .spinner {
-    width: 28px; height: 28px;
-    border: 2px solid var(--surface2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .state-msg { font-size: 12px; color: var(--text-dim); }
-
-  /* ── HIDDEN YOUTUBE FRAME ──────────────────── */
-  #yt-frame {
-    position: absolute;
-    width: 1px; height: 1px;
-    top: -9999px; left: -9999px;
-    pointer-events: none;
-    visibility: hidden;
-  }
-
-  /* ── SIZE CLASSES ──────────────────────────── */
-  body.size-compact .panel { display: none; }
-  body.size-compact .bar { height: 80px; }
-
-  body.size-normal .panel { display: none; }
-  body.size-normal .bar { height: 80px; }
-
-  body.size-full .bar { border-bottom: 1px solid var(--border); }
-
-  /* ── TOAST ─────────────────────────────────── */
-  .toast {
-    position: absolute;
-    bottom: 12px; left: 50%; transform: translateX(-50%);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: 11px;
-    padding: 6px 14px;
-    border-radius: 99px;
-    white-space: nowrap;
-    z-index: 100;
-    opacity: 0;
-    transition: opacity 0.2s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
+@media (max-width:899px) {
+  .sa-sidebar { display:contents; }
+  .sa-layout  { display:contents; }
+  body.standalone-mode .si-title { font-size:17px; }
+  body.standalone-mode .standalone-info { padding:14px 16px 10px; }
+}
 </style>
 </head>
-<body class="size-full">
+<body>
 
-<div class="player" id="player">
+<div class="root" id="root">
   <div class="ambient" id="ambient"></div>
 
-  <!-- Compact bar -->
-  <div class="bar">
-    <img class="bar-thumb" id="barThumb" src="" alt="">
-    <div class="bar-info">
-      <div class="bar-title" id="barTitle">Playlist bekleniyor</div>
-      <div class="bar-channel" id="barChannel">—</div>
-      <div class="bar-progress">
-        <div class="bar-progress-fill" id="progressFill"></div>
+  <!-- ── STANDALONE: Video player (visible only in standalone mode) ── -->
+  <div class="sa-layout standalone-only">
+    <div class="video-stage">
+      <iframe id="yt-player-visible"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowfullscreen
+        src="about:blank"></iframe>
+    </div>
+
+    <div class="sa-sidebar">
+      <!-- Info -->
+      <div class="standalone-info">
+        <div class="si-title"   id="siTitle">Yükleniyor...</div>
+        <div class="si-channel" id="siChannel">—</div>
+        <div class="si-actions">
+          <a class="si-btn yt" id="siYtLink" href="#" target="_blank" rel="noopener">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M21.8 8a2.75 2.75 0 0 0-1.94-1.95C18.2 5.6 12 5.6 12 5.6s-6.2 0-7.86.45A2.75 2.75 0 0 0 2.2 8 28.8 28.8 0 0 0 1.75 12c0 1.37.15 2.71.45 4a2.75 2.75 0 0 0 1.94 1.95C5.8 18.4 12 18.4 12 18.4s6.2 0 7.86-.45A2.75 2.75 0 0 0 21.8 16a28.8 28.8 0 0 0 .45-4 28.8 28.8 0 0 0-.45-4zM9.75 15V9l5.75 3-5.75 3z"/>
+            </svg>
+            YouTube'da Aç
+          </a>
+        </div>
+      </div>
+
+      <!-- Bar (kontroller — standalone'da playlist header gibi çalışır) -->
+      <div class="bar">
+        <img class="bar-thumb" id="barThumb" src="" alt="">
+        <div class="bar-info">
+          <div class="bar-title"   id="barTitle">Bekleniyor</div>
+          <div class="bar-channel" id="barChannel">—</div>
+          <div class="bar-prog"><div class="bar-prog-fill" id="progFill"></div></div>
+        </div>
+        <div class="bar-ctrls">
+          <button class="ctrl-btn" onclick="prevTrack()" title="Önceki">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn play" id="btnPlay" onclick="togglePlay()" title="Oynat/Durdur">
+            <svg id="icPlay"  width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            <svg id="icPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" onclick="nextTrack()" title="Sonraki">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Playlist panel -->
+      <div class="panel" id="panel">
+        <div class="panel-header">
+          <span class="panel-title" id="panelTitle">Playlist</span>
+          <span class="panel-count" id="panelCount">0 video</span>
+        </div>
+        <div class="panel-list" id="panelList"></div>
       </div>
     </div>
-    <div class="bar-controls">
-      <button class="ctrl-btn" id="btnPrev" onclick="prevTrack()" title="Önceki">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-      </button>
-      <button class="ctrl-btn play-btn" id="btnPlay" onclick="togglePlay()" title="Oynat/Durdur">
-        <svg id="iconPlay" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        <svg id="iconPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-      </button>
-      <button class="ctrl-btn" id="btnNext" onclick="nextTrack()" title="Sonraki">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
-      </button>
-      <button class="expand-btn" id="btnExpand" onclick="togglePanel()" title="Listeyi Aç/Kapat">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" id="expandIcon"><path d="M7 10l5 5 5-5z"/></svg>
-      </button>
+  </div>
+
+  <!-- ── IFRAME MODE: compact bar + panel ── -->
+  <div class="embed-only" id="embedLayout" style="display:flex;flex-direction:column;height:100%;position:relative;z-index:1;">
+    <div class="bar">
+      <img class="bar-thumb" id="barThumbE" src="" alt="">
+      <div class="bar-info">
+        <div class="bar-title"   id="barTitleE">Playlist bekleniyor</div>
+        <div class="bar-channel" id="barChannelE">—</div>
+        <div class="bar-prog"><div class="bar-prog-fill" id="progFillE"></div></div>
+      </div>
+      <div class="bar-ctrls">
+        <button class="ctrl-btn" onclick="prevTrack()" title="Önceki">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+        </button>
+        <button class="ctrl-btn play" id="btnPlayE" onclick="togglePlay()" title="Oynat/Durdur">
+          <svg id="icPlayE"  width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <svg id="icPauseE" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="nextTrack()" title="Sonraki">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+        </button>
+        <button class="expand-btn embed-only" onclick="togglePanel()" title="Liste">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" id="expandIco"><path d="M7 10l5 5 5-5z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel" id="panelE" style="display:none;">
+      <div class="panel-header">
+        <span class="panel-title" id="panelTitleE">Playlist</span>
+        <span class="panel-count" id="panelCountE">0 video</span>
+      </div>
+      <div class="panel-list" id="panelListE"></div>
     </div>
   </div>
 
-  <!-- Playlist panel -->
-  <div class="panel" id="panel">
-    <div class="panel-header">
-      <span class="panel-title" id="panelTitle">Playlist</span>
-      <span class="panel-count" id="panelCount">0 video</span>
-    </div>
-    <div class="panel-list" id="panelList"></div>
-  </div>
-
-  <!-- Loading overlay -->
-  <div class="state-overlay" id="stateOverlay">
+  <!-- Overlay (her iki modda da) -->
+  <div class="overlay" id="overlay">
     <div class="spinner" id="spinner"></div>
-    <div class="state-msg" id="stateMsg">Yükleniyor...</div>
+    <div class="overlay-msg" id="overlayMsg">Yükleniyor...</div>
   </div>
-
-  <div class="toast" id="toast"></div>
 </div>
 
-<!-- Hidden YouTube IFrame API player -->
-<div id="yt-frame"></div>
+<!-- Gizli YT player (sadece iframe modu) -->
+<div id="yt-bg"></div>
 
 <script>
-// ── Config ──────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  MOD TESPİTİ
+// ══════════════════════════════════════════════════════════
+const IS_STANDALONE = window.self === window.top;
+document.body.classList.add(IS_STANDALONE ? 'standalone-mode' : 'embed-mode');
+
+// Iframe modunda embed layout'u göster
+if (!IS_STANDALONE) {
+  document.getElementById('embedLayout').style.display = 'flex';
+  const el = document.getElementById('embedLayout');
+  el.style.flexDirection = 'column';
+  el.style.height = '100%';
+}
+
+// Size modu (sadece iframe)
+const params   = new URLSearchParams(window.location.search);
+const sizeMode = params.get('size') || 'full';
+if (!IS_STANDALONE) document.body.classList.add('size-' + sizeMode);
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
 const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
 
 let playlist   = [];
 let currentIdx = 0;
-let ytPlayer   = null;
+let ytPlayer   = null;   // iframe modu için YT.Player
 let isPlaying  = false;
 let isReady    = false;
-let progressTimer = null;
+let progTimer  = null;
+let panelOpen  = sizeMode === 'full' && !IS_STANDALONE;
 
-// ── Size mode ────────────────────────────────────────────────────────────────
-const params   = new URLSearchParams(window.location.search);
-const sizeMode = params.get('size') || 'full';
-document.body.className = `size-${sizeMode}`;
-
-// Auto-show panel only in full mode
-let panelVisible = sizeMode === 'full';
-if (!panelVisible) document.getElementById('panel').style.display = 'none';
-
-// ── YouTube IFrame API ───────────────────────────────────────────────────────
-const tag = document.createElement('script');
-tag.src   = 'https://www.youtube.com/iframe_api';
-document.head.appendChild(tag);
+// ══════════════════════════════════════════════════════════
+//  YOUTUBE IFRAME API
+// ══════════════════════════════════════════════════════════
+const apiTag = document.createElement('script');
+apiTag.src   = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(apiTag);
 
 function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player('yt-frame', {
-    height: '1', width: '1',
-    playerVars: { autoplay: 0, controls: 0, rel: 0 },
-    events: {
-      onReady:       onPlayerReady,
-      onStateChange: onPlayerStateChange,
-    }
-  });
-}
-
-function onPlayerReady() {
-  isReady = true;
-  const hash = window.location.hash.slice(1);
-  if (hash) loadPlaylist(hash);
-  else hideOverlay();
-}
-
-function onPlayerStateChange(e) {
-  const S = YT.PlayerState;
-  if (e.data === S.PLAYING) {
-    setPlaying(true);
-    startProgress();
-  } else if (e.data === S.PAUSED) {
-    setPlaying(false);
-    stopProgress();
-  } else if (e.data === S.ENDED) {
-    nextTrack();
+  if (IS_STANDALONE) {
+    isReady = true;
+    initFromUrl();
+  } else {
+    ytPlayer = new YT.Player('yt-bg', {
+      height:'1', width:'1',
+      playerVars:{ autoplay:0, controls:0, rel:0 },
+      events:{
+        onReady:       () => { isReady = true; initFromUrl(); },
+        onStateChange: onStateChange,
+      }
+    });
   }
 }
 
-// ── Playlist loader ──────────────────────────────────────────────────────────
+function onStateChange(e) {
+  const S = YT.PlayerState;
+  if      (e.data === S.PLAYING) { setPlaying(true);  startProg(); }
+  else if (e.data === S.PAUSED)  { setPlaying(false); stopProg(); }
+  else if (e.data === S.ENDED)   { nextTrack(); }
+}
+
+// ══════════════════════════════════════════════════════════
+//  PLAYLIST ID TESPİTİ
+// ══════════════════════════════════════════════════════════
+function initFromUrl() {
+  // Önce hash, sonra URL path (vercel rewrite ile geliyor)
+  let id = window.location.hash.slice(1)
+        || params.get('list')
+        || extractPathId(window.location.pathname);
+
+  if (id) loadPlaylist(id);
+  else    hideOverlay();
+}
+
+function extractPathId(path) {
+  const m = path.match(/\/(PL[a-zA-Z0-9_-]{16,})/);
+  return m ? m[1] : null;
+}
+
+// ══════════════════════════════════════════════════════════
+//  PLAYLIST LOADER
+// ══════════════════════════════════════════════════════════
 async function loadPlaylist(id) {
   if (!id) return;
   if (!id.startsWith('PL')) id = 'PL' + id;
@@ -471,29 +457,27 @@ async function loadPlaylist(id) {
     const plRes  = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${id}&key=${API_KEY}`);
     const plData = await plRes.json();
     if (!plData.items?.length) throw new Error('Playlist bulunamadı');
+    const plSnip = plData.items[0].snippet;
 
-    const plInfo  = plData.items[0].snippet;
-    const plCount = plData.items[0].contentDetails.itemCount;
-
-    // Videoları çek
-    let allItems = [], pageToken = '';
+    // Tüm videolar
+    let all = [], token = '';
     do {
-      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${id}&key=${API_KEY}${pageToken ? '&pageToken='+pageToken : ''}`);
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${id}&key=${API_KEY}${token ? '&pageToken='+token : ''}`);
       const d = await r.json();
       if (d.error) throw new Error(d.error.message);
-      allItems = allItems.concat(d.items || []);
-      pageToken = d.nextPageToken || '';
-    } while (pageToken);
+      all = all.concat(d.items || []);
+      token = d.nextPageToken || '';
+    } while (token);
 
-    // Video detayları
-    const ids     = allItems.filter(i => i.snippet.title !== 'Private video' && i.snippet.title !== 'Deleted video').map(i => i.snippet.resourceId.videoId);
-    const detRes  = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${ids.join(',')}&key=${API_KEY}`);
-    const detData = await detRes.json();
-    const detMap  = {};
-    detData.items?.forEach(v => detMap[v.id] = v);
+    // Video detayları (süre için)
+    const ids    = all.filter(i => !['Private video','Deleted video'].includes(i.snippet.title))
+                      .map(i => i.snippet.resourceId.videoId);
+    const detRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,snippet&id=${ids.join(',')}&key=${API_KEY}`);
+    const detMap = {};
+    (await detRes.json()).items?.forEach(v => detMap[v.id] = v);
 
     playlist = ids.map(vid => {
-      const item = allItems.find(i => i.snippet.resourceId.videoId === vid);
+      const item = all.find(i => i.snippet.resourceId.videoId === vid);
       const det  = detMap[vid];
       return {
         videoId:   vid,
@@ -504,124 +488,164 @@ async function loadPlaylist(id) {
       };
     });
 
-    document.getElementById('panelTitle').textContent  = plInfo.title;
-    document.getElementById('panelCount').textContent  = `${playlist.length} video`;
+    // Başlık ve sayaçları güncelle
+    if (IS_STANDALONE) {
+      document.title = plSnip.title + ' — YTEmbed';
+      document.getElementById('panelTitle').textContent  = plSnip.title;
+      document.getElementById('panelCount').textContent  = `${playlist.length} video`;
+    } else {
+      document.getElementById('panelTitleE').textContent = plSnip.title;
+      document.getElementById('panelCountE').textContent = `${playlist.length} video`;
+    }
 
     renderList();
     playTrack(0);
     hideOverlay();
 
-    // postMessage to parent
-    postOut({ type: 'playlistLoaded', title: plInfo.title, count: playlist.length });
-
-  } catch (err) {
+    postOut({ type:'playlistLoaded', title:plSnip.title, count:playlist.length });
+  } catch(err) {
     showOverlay(err.message, false);
   }
 }
 
-// ── Playback ─────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  PLAYBACK
+// ══════════════════════════════════════════════════════════
 function playTrack(idx) {
   if (!playlist.length || idx < 0 || idx >= playlist.length) return;
   currentIdx = idx;
-  const track = playlist[idx];
+  const t = playlist[idx];
 
-  if (isReady && ytPlayer) {
-    ytPlayer.loadVideoById(track.videoId);
+  if (IS_STANDALONE) {
+    // Görünür YT iframe'i güncelle
+    const iframe = document.getElementById('yt-player-visible');
+    iframe.src = `https://www.youtube.com/embed/${t.videoId}?autoplay=1&rel=0&enablejsapi=1`;
+
+    // Standalone info paneli
+    document.getElementById('siTitle').textContent   = t.title;
+    document.getElementById('siChannel').textContent = t.channel;
+    document.getElementById('siYtLink').href = `https://www.youtube.com/watch?v=${t.videoId}`;
+
+    setPlaying(true);
+  } else {
+    if (isReady && ytPlayer) ytPlayer.loadVideoById(t.videoId);
   }
 
-  // Update bar
-  document.getElementById('barThumb').src     = track.thumbnail;
-  document.getElementById('barTitle').textContent   = track.title;
-  document.getElementById('barChannel').textContent = track.channel;
-
-  // Thumb pulse
-  const thumb = document.getElementById('barThumb');
-  thumb.classList.remove('pulse');
-  void thumb.offsetWidth;
-  thumb.classList.add('pulse');
-
-  // Ambient color from thumbnail
-  updateAmbient(track.thumbnail);
-
+  // Bar güncelle (hem standalone hem embed)
+  updateBar(t);
+  updateAmbient(t.thumbnail);
   renderList();
 
-  postOut({ type: 'trackChange', index: idx, title: track.title, channel: track.channel, thumbnail: track.thumbnail });
+  postOut({ type:'trackChange', index:idx, title:t.title, channel:t.channel, thumbnail:t.thumbnail });
+}
+
+function updateBar(t) {
+  if (IS_STANDALONE) {
+    document.getElementById('barThumb').src           = t.thumbnail;
+    document.getElementById('barTitle').textContent   = t.title;
+    document.getElementById('barChannel').textContent = t.channel;
+    pulse('barThumb');
+  } else {
+    document.getElementById('barThumbE').src            = t.thumbnail;
+    document.getElementById('barTitleE').textContent    = t.title;
+    document.getElementById('barChannelE').textContent  = t.channel;
+    pulse('barThumbE');
+  }
+}
+
+function pulse(id) {
+  const el = document.getElementById(id);
+  el.classList.remove('pulse');
+  void el.offsetWidth;
+  el.classList.add('pulse');
 }
 
 function togglePlay() {
-  if (!ytPlayer || !isReady) return;
-  if (isPlaying) ytPlayer.pauseVideo();
-  else           ytPlayer.playVideo();
+  if (IS_STANDALONE) {
+    // Cross-origin iframe postMessage
+    const iframe = document.getElementById('yt-player-visible');
+    const cmd = isPlaying
+      ? '{"event":"command","func":"pauseVideo","args":""}'
+      : '{"event":"command","func":"playVideo","args":""}';
+    iframe.contentWindow?.postMessage(cmd, '*');
+    setPlaying(!isPlaying);
+  } else {
+    if (!ytPlayer || !isReady) return;
+    isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
+  }
 }
 
-function prevTrack() {
-  if (currentIdx > 0) playTrack(currentIdx - 1);
-}
-
-function nextTrack() {
-  if (currentIdx < playlist.length - 1) playTrack(currentIdx + 1);
-}
+function prevTrack() { if (currentIdx > 0) playTrack(currentIdx - 1); }
+function nextTrack() { if (currentIdx < playlist.length - 1) playTrack(currentIdx + 1); }
 
 function setPlaying(val) {
   isPlaying = val;
-  document.getElementById('iconPlay').style.display  = val ? 'none' : '';
-  document.getElementById('iconPause').style.display = val ? '' : 'none';
-  document.getElementById('panel').classList.toggle('paused', !val);
-  postOut({ type: 'stateChange', playing: val });
+  // Standalone ikonları
+  if (IS_STANDALONE) {
+    document.getElementById('icPlay').style.display  = val ? 'none' : '';
+    document.getElementById('icPause').style.display = val ? '' : 'none';
+  } else {
+    document.getElementById('icPlayE').style.display  = val ? 'none' : '';
+    document.getElementById('icPauseE').style.display = val ? '' : 'none';
+  }
+  document.getElementById(IS_STANDALONE ? 'panel' : 'panelE')?.classList.toggle('paused', !val);
+  postOut({ type:'stateChange', playing:val });
 }
 
-// ── Progress ─────────────────────────────────────────────────────────────────
-function startProgress() {
-  stopProgress();
-  progressTimer = setInterval(() => {
-    if (!ytPlayer || !isReady) return;
-    const dur = ytPlayer.getDuration() || 0;
+// ══════════════════════════════════════════════════════════
+//  PROGRESS (iframe modu için gerçek, standalone için simüle)
+// ══════════════════════════════════════════════════════════
+function startProg() {
+  stopProg();
+  progTimer = setInterval(() => {
+    if (!ytPlayer) return;
+    const dur = ytPlayer.getDuration()    || 0;
     const cur = ytPlayer.getCurrentTime() || 0;
     const pct = dur > 0 ? (cur / dur) * 100 : 0;
-    document.getElementById('progressFill').style.width = pct + '%';
-    postOut({ type: 'progress', current: Math.floor(cur), duration: Math.floor(dur), percent: pct });
+    document.getElementById('progFillE').style.width = pct + '%';
+    postOut({ type:'progress', current:Math.floor(cur), duration:Math.floor(dur), percent:pct });
   }, 1000);
 }
-function stopProgress() {
-  clearInterval(progressTimer);
-}
+function stopProg() { clearInterval(progTimer); }
 
-// ── Panel toggle ─────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  PANEL TOGGLE (iframe modu)
+// ══════════════════════════════════════════════════════════
 function togglePanel() {
-  panelVisible = !panelVisible;
-  document.getElementById('panel').style.display = panelVisible ? '' : 'none';
-  document.getElementById('expandIcon').style.transform = panelVisible ? 'rotate(180deg)' : '';
+  panelOpen = !panelOpen;
+  document.getElementById('panelE').style.display = panelOpen ? 'flex' : 'none';
+  document.getElementById('expandIco').style.transform = panelOpen ? 'rotate(180deg)' : '';
 }
 
-// ── Render list ──────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  RENDER LIST
+// ══════════════════════════════════════════════════════════
 function renderList() {
-  const el = document.getElementById('panelList');
+  const targetId = IS_STANDALONE ? 'panelList' : 'panelListE';
+  const el = document.getElementById(targetId);
   el.innerHTML = playlist.map((t, i) => `
     <div class="track-item ${i === currentIdx ? 'active' : ''}" onclick="playTrack(${i})">
       <div class="track-num">
         <span class="track-num-val">${i + 1}</span>
         <div class="track-playing">
-          <div class="bar-wave"></div>
-          <div class="bar-wave"></div>
-          <div class="bar-wave"></div>
+          <div class="bwave"></div><div class="bwave"></div><div class="bwave"></div>
         </div>
       </div>
       <img class="track-thumb" src="${t.thumbnail}" alt="">
       <div class="track-info">
-        <div class="track-name">${escHtml(t.title)}</div>
-        <div class="track-ch">${escHtml(t.channel)}</div>
+        <div class="track-name">${esc(t.title)}</div>
+        <div class="track-ch">${esc(t.channel)}</div>
       </div>
       <div class="track-dur">${t.duration}</div>
     </div>
   `).join('');
-
-  // Scroll active into view
-  const active = el.querySelector('.active');
-  if (active) active.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  el.querySelector('.active')?.scrollIntoView({ block:'nearest', behavior:'smooth' });
 }
 
-// ── Ambient ──────────────────────────────────────────────────────────────────
-function updateAmbient(imgUrl) {
+// ══════════════════════════════════════════════════════════
+//  AMBIENT RENK
+// ══════════════════════════════════════════════════════════
+function updateAmbient(url) {
   const img = new Image();
   img.crossOrigin = 'anonymous';
   img.onload = () => {
@@ -630,70 +654,67 @@ function updateAmbient(imgUrl) {
     const ctx = c.getContext('2d');
     ctx.drawImage(img, 0, 0, 8, 8);
     const d = ctx.getImageData(0, 0, 8, 8).data;
-    let r=0,g=0,b=0,n=d.length/4;
-    for(let i=0;i<d.length;i+=4){r+=d[i];g+=d[i+1];b+=d[i+2];}
-    r=Math.floor(r/n); g=Math.floor(g/n); b=Math.floor(b/n);
+    let r=0, g=0, b=0, n = d.length / 4;
+    for (let i=0; i<d.length; i+=4) { r+=d[i]; g+=d[i+1]; b+=d[i+2]; }
+    r = Math.floor(r/n); g = Math.floor(g/n); b = Math.floor(b/n);
     document.getElementById('ambient').style.background =
-      `radial-gradient(ellipse 80% 60% at 50% 0%, rgb(${r},${g},${b}), transparent)`;
+      `radial-gradient(ellipse 80% 50% at 50% 0%, rgb(${r},${g},${b}), transparent)`;
   };
-  img.src = imgUrl;
+  img.src = url;
 }
 
-// ── postMessage API ───────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  postMessage API
+// ══════════════════════════════════════════════════════════
 function postOut(data) {
-  try { window.parent.postMessage({ source: 'ytembed', ...data }, '*'); } catch(e) {}
+  try { window.parent.postMessage({ source:'ytembed', ...data }, '*'); } catch(e) {}
 }
 
 window.addEventListener('message', e => {
   const d = e.data;
   if (!d || d.target !== 'ytembed') return;
-
   switch(d.type) {
-    case 'play':       ytPlayer?.playVideo();  break;
-    case 'pause':      ytPlayer?.pauseVideo(); break;
-    case 'toggle':     togglePlay();           break;
-    case 'next':       nextTrack();            break;
-    case 'prev':       prevTrack();            break;
-    case 'setTrack':   playTrack(d.index);     break;
-    case 'load':       loadPlaylist(d.id);     break;
-    case 'seek':       ytPlayer?.seekTo(d.seconds, true); break;
-    case 'volume':     ytPlayer?.setVolume(d.value);      break;
+    case 'play':     IS_STANDALONE ? null : ytPlayer?.playVideo();   break;
+    case 'pause':    IS_STANDALONE ? null : ytPlayer?.pauseVideo();  break;
+    case 'toggle':   togglePlay();       break;
+    case 'next':     nextTrack();        break;
+    case 'prev':     prevTrack();        break;
+    case 'setTrack': playTrack(d.index); break;
+    case 'load':     loadPlaylist(d.id); break;
+    case 'seek':     if (!IS_STANDALONE && ytPlayer) ytPlayer.seekTo(d.seconds ?? d.value, true); break;
+    case 'volume':   if (!IS_STANDALONE && ytPlayer) ytPlayer.setVolume(d.value); break;
+    case 'size':
+      if (!IS_STANDALONE) {
+        document.body.classList.remove('size-compact','size-normal','size-full');
+        document.body.classList.add('size-' + d.value);
+      }
+      break;
     case 'getState':
-      postOut({ type: 'state', playing: isPlaying, index: currentIdx, count: playlist.length });
+      postOut({ type:'state', playing:isPlaying, index:currentIdx, count:playlist.length });
       break;
   }
 });
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════
+//  YARDIMCILAR
+// ══════════════════════════════════════════════════════════
 function parseDuration(iso) {
   const m = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
   if (!m) return '';
-  const h = m[1]||0, mn = m[2]||0, s = m[3]||0;
+  const h = +m[1]||0, mn = +m[2]||0, s = +m[3]||0;
   return h > 0
     ? `${h}:${String(mn).padStart(2,'0')}:${String(s).padStart(2,'0')}`
     : `${mn}:${String(s).padStart(2,'0')}`;
 }
-
-function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-function showOverlay(msg, spinner=true) {
-  document.getElementById('stateOverlay').classList.remove('hidden');
-  document.getElementById('spinner').style.display = spinner ? '' : 'none';
-  document.getElementById('stateMsg').textContent  = msg;
+function showOverlay(msg, spin=true) {
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('spinner').style.display = spin ? '' : 'none';
+  document.getElementById('overlayMsg').textContent = msg;
 }
-
-function hideOverlay() {
-  document.getElementById('stateOverlay').classList.add('hidden');
-}
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
+function hideOverlay() { document.getElementById('overlay').classList.add('hidden'); }
 </script>
 </body>
 </html>
