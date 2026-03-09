@@ -4,18 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- Temel Meta Tags -->
     <title>YouTube Playlist Player</title>
     <meta name="description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle.">
     <meta name="keywords" content="youtube, playlist, müzik, çalma listesi, video">
     <meta name="author" content="YouTube Playlist Player">
     
-    <!-- Open Graph / Facebook -->
+    <!-- Open Graph -->
     <meta property="fb:app_id" content="966242223397117">
     <meta property="og:type" content="website" id="ogType">
     <meta property="og:url" content="" id="ogUrl">
     <meta property="og:title" content="YouTube Playlist Player" id="ogTitle">
-    <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="ogDescription">
+    <meta property="og:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar." id="ogDescription">
     <meta property="og:image" content="" id="ogImage">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
@@ -26,20 +25,15 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="" id="twitterUrl">
     <meta name="twitter:title" content="YouTube Playlist Player" id="twitterTitle">
-    <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar. Favori şarkılarını tek bir yerde dinle." id="twitterDescription">
+    <meta name="twitter:description" content="YouTube playlistlerini keşfet ve müziğin tadını çıkar." id="twitterDescription">
     <meta name="twitter:image" content="" id="twitterImage">
     
-    <!-- Discord Embed -->
     <meta name="theme-color" content="#667eea">
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Roboto', sans-serif;
@@ -53,10 +47,7 @@
             background: linear-gradient(180deg, var(--theme-color, #1e3a5f) 0%, #121212 50%);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
+        .container { max-width: 1400px; margin: 0 auto; }
 
         .header {
             text-align: center;
@@ -64,24 +55,10 @@
             margin-bottom: 40px;
             padding-top: 20px;
         }
+        .header h1 { font-size: 2.2rem; font-weight: 500; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .header p  { font-size: 0.95rem; opacity: 0.7; font-weight: 300; }
 
-        .header h1 {
-            font-size: 2.2rem;
-            font-weight: 500;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        .header p {
-            font-size: 0.95rem;
-            opacity: 0.7;
-            font-weight: 300;
-        }
-
-        .search-container {
-            max-width: 700px;
-            margin: 0 auto 40px;
-        }
+        .search-container { max-width: 700px; margin: 0 auto 40px; }
 
         .search-box {
             background: #282828;
@@ -94,60 +71,29 @@
             transition: all 0.3s ease;
             border: 2px solid transparent;
         }
-
         .search-box:focus-within {
             background: #333;
             border-color: rgba(255,255,255,0.1);
             box-shadow: 0 12px 32px rgba(0,0,0,0.5);
         }
-
-        .search-icon {
-            color: #b3b3b3;
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-        }
-
+        .search-icon { color: #b3b3b3; padding: 0 16px; display: flex; align-items: center; }
         .search-box input {
-            flex: 1;
-            border: none;
-            outline: none;
-            padding: 16px 8px;
-            font-size: 0.95rem;
+            flex: 1; border: none; outline: none;
+            padding: 16px 8px; font-size: 0.95rem;
             font-family: 'Roboto', sans-serif;
-            background: transparent;
-            color: white;
+            background: transparent; color: white;
         }
-
-        .search-box input::placeholder {
-            color: #b3b3b3;
-        }
-
+        .search-box input::placeholder { color: #b3b3b3; }
         .search-box button {
-            background: white;
-            color: #121212;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 32px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: white; color: #121212; border: none;
+            border-radius: 50px; padding: 12px 32px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
             transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            text-transform: uppercase; letter-spacing: 1px;
         }
-
-        .search-box button:hover {
-            transform: scale(1.05);
-            background: #f0f0f0;
-        }
-
-        .search-box button:active {
-            transform: scale(0.98);
-        }
+        .search-box button:hover { transform: scale(1.05); background: #f0f0f0; }
+        .search-box button:active { transform: scale(0.98); }
 
         .player-container {
             background: #181818;
@@ -163,344 +109,134 @@
         }
 
         .video-wrapper {
-            position: relative;
-            padding-bottom: 56.25%;
-            background: #000;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
-            margin-bottom: 24px;
+            position: relative; padding-bottom: 56.25%;
+            background: #000; border-radius: 8px; overflow: hidden;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6); margin-bottom: 24px;
         }
-
         .video-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         }
 
-        .video-info {
-            display: flex;
-            align-items: flex-start;
-            gap: 24px;
-        }
+        .video-info { display: flex; align-items: flex-start; gap: 24px; }
 
         .video-thumbnail {
-            width: 140px;
-            height: 140px;
-            border-radius: 4px;
-            object-fit: cover;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            width: 140px; height: 140px; border-radius: 4px;
+            object-fit: cover; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
 
-        .video-details {
-            flex: 1;
-            padding-top: 8px;
-        }
-
+        .video-details { flex: 1; padding-top: 8px; }
         .video-type {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #b3b3b3;
-            margin-bottom: 8px;
-            font-weight: 500;
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;
+            color: #b3b3b3; margin-bottom: 8px; font-weight: 500;
         }
-
         .video-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: white;
-            margin-bottom: 12px;
-            line-height: 1.3;
-            letter-spacing: -0.5px;
+            font-size: 2rem; font-weight: 700; color: white;
+            margin-bottom: 12px; line-height: 1.3; letter-spacing: -0.5px;
         }
-
-        .video-channel {
-            font-size: 1rem;
-            color: #b3b3b3;
-            margin-bottom: 16px;
-            font-weight: 400;
-        }
-
+        .video-channel { font-size: 1rem; color: #b3b3b3; margin-bottom: 16px; font-weight: 400; }
         .video-stats {
-            display: flex;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: #b3b3b3;
-            align-items: center;
+            display: flex; gap: 8px; font-size: 0.85rem;
+            color: #b3b3b3; align-items: center;
         }
+        .video-stats span { display: flex; align-items: center; gap: 4px; }
+        .stats-dot { width: 4px; height: 4px; background: #b3b3b3; border-radius: 50%; }
 
-        .video-stats span {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .stats-dot {
-            width: 4px;
-            height: 4px;
-            background: #b3b3b3;
-            border-radius: 50%;
-        }
-
-        .playlist-section {
-            padding: 24px 40px 32px;
-            background: #181818;
-        }
+        .playlist-section { padding: 24px 40px 32px; background: #181818; }
 
         .playlist-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            flex-wrap: wrap;
-            gap: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; padding-bottom: 8px; flex-wrap: wrap; gap: 12px;
         }
-
-        .playlist-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-
-        .playlist-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .playlist-count {
-            font-size: 0.85rem;
-            color: #b3b3b3;
-            font-weight: 400;
-        }
+        .playlist-title { font-size: 1.5rem; font-weight: 700; color: white; letter-spacing: -0.5px; }
+        .playlist-meta { display: flex; align-items: center; gap: 12px; }
+        .playlist-count { font-size: 0.85rem; color: #b3b3b3; font-weight: 400; }
 
         .share-button {
-            background: #282828;
-            color: white;
-            border: 1px solid #404040;
-            border-radius: 20px;
-            padding: 6px 16px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            font-weight: 500;
+            background: #282828; color: white; border: 1px solid #404040;
+            border-radius: 20px; padding: 6px 16px; font-size: 0.8rem;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+            transition: all 0.2s ease; font-weight: 500;
         }
-
-        .share-button:hover {
-            background: #383838;
-            border-color: #505050;
-        }
-
-        .share-button .material-icons {
-            font-size: 16px;
-        }
+        .share-button:hover { background: #383838; border-color: #505050; }
+        .share-button .material-icons { font-size: 16px; }
 
         .playlist-content {
-            max-height: 500px;
-            overflow-y: auto;
-            margin: 0 -8px;
-            padding: 0 8px;
+            max-height: 500px; overflow-y: auto; margin: 0 -8px; padding: 0 8px;
         }
 
         .video-item {
-            display: flex;
-            gap: 16px;
-            padding: 10px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 4px;
+            display: flex; gap: 16px; padding: 10px 12px;
+            border-radius: 4px; cursor: pointer;
+            transition: all 0.2s ease; margin-bottom: 4px;
         }
-
-        .video-item:hover {
-            background: #282828;
-        }
-
-        .video-item.active {
-            background: #282828;
-        }
+        .video-item:hover { background: #282828; }
+        .video-item.active { background: #282828; }
 
         .video-item-thumbnail {
-            width: 80px;
-            height: 45px;
-            border-radius: 4px;
-            object-fit: cover;
-            flex-shrink: 0;
+            width: 80px; height: 45px; border-radius: 4px;
+            object-fit: cover; flex-shrink: 0;
         }
 
         .video-item-info {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            flex: 1; min-width: 0; display: flex;
+            flex-direction: column; justify-content: center;
         }
-
         .video-item-title {
-            font-size: 0.95rem;
-            font-weight: 400;
-            color: white;
-            margin-bottom: 4px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            font-size: 0.95rem; font-weight: 400; color: white;
+            margin-bottom: 4px; overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
         }
-
         .video-item.active .video-item-title {
-            color: var(--theme-color-light, #1db954);
-            font-weight: 500;
+            color: var(--theme-color-light, #1db954); font-weight: 500;
         }
-
         .video-item-meta {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.8rem;
-            color: #b3b3b3;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; color: #b3b3b3;
         }
+        .video-item-channel { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .meta-dot { width: 3px; height: 3px; background: #b3b3b3; border-radius: 50%; }
 
-        .video-item-channel {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .meta-dot {
-            width: 3px;
-            height: 3px;
-            background: #b3b3b3;
-            border-radius: 50%;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 80px 20px;
-            color: white;
-        }
-
+        .loading { text-align: center; padding: 80px 20px; color: white; }
         .loading-spinner {
-            width: 40px;
-            height: 40px;
+            width: 40px; height: 40px;
             border: 3px solid rgba(255,255,255,0.1);
             border-top: 3px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
 
         .error {
-            background: #5a2a27;
-            color: #f4b8b4;
-            padding: 16px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: none;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            font-size: 0.9rem;
+            background: #5a2a27; color: #f4b8b4;
+            padding: 16px 20px; border-radius: 8px; margin-bottom: 20px;
+            display: none; max-width: 700px;
+            margin-left: auto; margin-right: auto; font-size: 0.9rem;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 100px 20px;
-            color: white;
-        }
+        .empty-state { text-align: center; padding: 100px 20px; color: white; }
+        .empty-state .material-icons { font-size: 80px; opacity: 0.3; margin-bottom: 24px; }
+        .empty-state h2 { font-size: 1.5rem; margin-bottom: 8px; font-weight: 600; }
+        .empty-state p  { font-size: 0.95rem; color: #b3b3b3; font-weight: 300; }
 
-        .empty-state .material-icons {
-            font-size: 80px;
-            opacity: 0.3;
-            margin-bottom: 24px;
-        }
-
-        .empty-state h2 {
-            font-size: 1.5rem;
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .empty-state p {
-            font-size: 0.95rem;
-            color: #b3b3b3;
-            font-weight: 300;
-        }
-
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #282828;
-            border-radius: 10px;
-            border: 3px solid #181818;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #3e3e3e;
-        }
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #282828; border-radius: 10px; border: 3px solid #181818; }
+        ::-webkit-scrollbar-thumb:hover { background: #3e3e3e; }
 
         @media (max-width: 768px) {
-            body {
-                padding: 12px;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .current-video {
-                padding: 24px 20px;
-            }
-
-            .video-info {
-                flex-direction: column;
-            }
-
-            .video-thumbnail {
-                width: 100%;
-                height: auto;
-                max-width: 200px;
-            }
-
-            .video-title {
-                font-size: 1.5rem;
-            }
-
-            .playlist-section {
-                padding: 20px;
-            }
-
-            .video-item-thumbnail {
-                width: 64px;
-                height: 36px;
-            }
-
-            .search-box button {
-                padding: 12px 20px;
-                font-size: 0.8rem;
-            }
+            body { padding: 12px; }
+            .header h1 { font-size: 1.5rem; }
+            .current-video { padding: 24px 20px; }
+            .video-info { flex-direction: column; }
+            .video-thumbnail { width: 100%; height: auto; max-width: 200px; }
+            .video-title { font-size: 1.5rem; }
+            .playlist-section { padding: 20px; }
+            .video-item-thumbnail { width: 64px; height: 36px; }
+            .search-box button { padding: 12px 20px; font-size: 0.8rem; }
         }
 
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -516,9 +252,7 @@
                     <span class="material-icons">search</span>
                 </div>
                 <input type="text" id="playlistInput" placeholder="Playlist URL veya ID girin...">
-                <button onclick="loadPlaylist()">
-                    Yükle
-                </button>
+                <button onclick="loadPlaylist()">Yükle</button>
             </div>
         </div>
 
@@ -550,7 +284,7 @@
                     <div class="playlist-title" id="playlistTitle">Playlist</div>
                     <div class="playlist-meta">
                         <div class="playlist-count" id="videoCount">0 şarkı</div>
-                        <button class="share-button" onclick="sharePlaylist()" title="Playlist'i paylaş">
+                        <button class="share-button" onclick="sharePlaylist()">
                             <span class="material-icons">share</span>
                             Paylaş
                         </button>
@@ -567,65 +301,94 @@
         let currentVideoIndex = 0;
         let currentPlaylistId = '';
 
+        // ── URL yönetimi ─────────────────────────────────────────────────────
+        function getPlaylistIdFromPath() {
+            const match = window.location.pathname.match(/\/(PL[a-zA-Z0-9_-]{16,})/);
+            return match ? match[1] : null;
+        }
+
+        // Hash veya path'ten ID çıkar, her zaman path'e normalize et
+        function initFromUrl() {
+            // Önce path: /PLxxxx
+            let id = getPlaylistIdFromPath();
+
+            // Yoksa hash: #PLxxxx → path'e taşı
+            if (!id) {
+                const hash = window.location.hash.replace('#', '');
+                if (hash && hash.startsWith('PL')) {
+                    id = hash;
+                    history.replaceState({}, '', '/' + id);
+                }
+            }
+
+            if (id) {
+                document.getElementById('playlistInput').value = id;
+                setTimeout(() => loadPlaylist(), 300);
+            }
+        }
+
+        // ── Share ────────────────────────────────────────────────────────────
         function sharePlaylist() {
             if (!currentPlaylistId) return;
-            
-    const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
-    
-    if (navigator.share) {
-        navigator.share({
-            title: document.getElementById('playlistTitle').textContent,
-            text: `${currentPlaylist.length} şarkı içeren playlist`,
-            url: shareUrl
-        }).catch(() => {
-            copyToClipboard(shareUrl);
-        });
-    } else {
-        copyToClipboard(shareUrl);
-    }
-}
+
+            // Path tabanlı temiz URL — # yok
+            const shareUrl = `${window.location.origin}/${currentPlaylistId}`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: document.getElementById('playlistTitle').textContent,
+                    text: `${currentPlaylist.length} şarkı içeren playlist`,
+                    url: shareUrl
+                }).catch(() => copyToClipboard(shareUrl));
+            } else {
+                copyToClipboard(shareUrl);
+            }
+        }
 
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 const btn = document.querySelector('.share-button');
-                const originalText = btn.innerHTML;
+                const orig = btn.innerHTML;
                 btn.innerHTML = '<span class="material-icons">check</span>Kopyalandı!';
                 btn.style.background = '#1db954';
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.style.background = '';
-                }, 2000);
+                setTimeout(() => { btn.innerHTML = orig; btn.style.background = ''; }, 2000);
             });
         }
 
-        function extractPlaylistId(url) {
-            const urlObj = new URL(url.includes('http') ? url : 'https://www.youtube.com/playlist?list=' + url);
-            return urlObj.searchParams.get('list');
+        // ── Playlist ID çıkarma ──────────────────────────────────────────────
+        function extractPlaylistId(input) {
+            // Tam URL mı?
+            try {
+                const url = new URL(input.includes('://') ? input : 'https://www.youtube.com/playlist?list=' + input);
+                const listParam = url.searchParams.get('list');
+                if (listParam) return listParam;
+            } catch(e) {}
+
+            // Direkt PL ile başlıyorsa
+            if (input.startsWith('PL')) return input;
+
+            return null;
         }
 
+        // ── Hata göster ──────────────────────────────────────────────────────
         function showError(message) {
-            const errorBox = document.getElementById('errorBox');
-            errorBox.textContent = message;
-            errorBox.classList.remove('hidden');
-            errorBox.style.display = 'block';
-            setTimeout(() => {
-                errorBox.classList.add('hidden');
-                errorBox.style.display = 'none';
-            }, 5000);
+            const box = document.getElementById('errorBox');
+            box.textContent = message;
+            box.style.display = 'block';
+            setTimeout(() => { box.style.display = 'none'; }, 5000);
         }
 
+        // ── Süre formatı ─────────────────────────────────────────────────────
         function formatDuration(duration) {
             const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-            const hours = (match[1] || '').replace('H', '');
-            const minutes = (match[2] || '').replace('M', '');
-            const seconds = (match[3] || '').replace('S', '');
-            
-            if (hours) {
-                return `${hours}:${minutes.padStart(2, '0')}:${seconds.padStart(2, '0')}`;
-            }
-            return `${minutes || '0'}:${seconds.padStart(2, '0')}`;
+            const h = (match[1] || '').replace('H', '');
+            const m = (match[2] || '').replace('M', '');
+            const s = (match[3] || '').replace('S', '');
+            if (h) return `${h}:${m.padStart(2,'0')}:${s.padStart(2,'0')}`;
+            return `${m||'0'}:${s.padStart(2,'0')}`;
         }
 
+        // ── Renk çıkarma ─────────────────────────────────────────────────────
         function extractColors(imageUrl) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -636,160 +399,124 @@
                     canvas.width = img.width;
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
-                    
                     try {
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         const data = imageData.data;
                         let r = 0, g = 0, b = 0;
-                        
                         for (let i = 0; i < data.length; i += 40) {
-                            r += data[i];
-                            g += data[i + 1];
-                            b += data[i + 2];
+                            r += data[i]; g += data[i+1]; b += data[i+2];
                         }
-                        
-                        const pixelCount = data.length /YOK;
+                        // Düzeltildi: data.length / 4 (bölü 4, bölü 40/4=10)
+                        const pixelCount = data.length / 4 / 10;
                         r = Math.floor(r / pixelCount);
                         g = Math.floor(g / pixelCount);
                         b = Math.floor(b / pixelCount);
-                        
                         const brightness = (r * 299 + g * 587 + b * 114) / 1000;
                         const factor = brightness > 128 ? 0.6 : 1.2;
-                        
                         r = Math.min(255, Math.floor(r * factor));
                         g = Math.min(255, Math.floor(g * factor));
                         b = Math.min(255, Math.floor(b * factor));
-                        
                         resolve({ r, g, b });
-                    } catch (e) {
+                    } catch(e) {
                         resolve({ r: 30, g: 58, b: 95 });
                     }
                 };
-                img.onerror = function() {
-                    resolve({ r: 30, g: 58, b: 95 });
-                };
+                img.onerror = () => resolve({ r: 30, g: 58, b: 95 });
                 img.src = imageUrl;
             });
         }
 
         function applyThemeColor(color) {
             const root = document.documentElement;
-            root.style.setProperty('--theme-color', `rgb(${color.r}, ${color.g}, ${color.b})`);
-            root.style.setProperty('--theme-color-dark', `rgb(${Math.floor(color.r * 0.6)}, ${Math.floor(color.g * 0.6)}, ${Math.floor(color.b * 0.6)})`);
-            root.style.setProperty('--theme-color-light', `rgb(${Math.min(255, color.r + 60)}, ${Math.min(255, color.g + 60)}, ${Math.min(255, color.b + 60)})`);
+            root.style.setProperty('--theme-color', `rgb(${color.r},${color.g},${color.b})`);
+            root.style.setProperty('--theme-color-dark', `rgb(${Math.floor(color.r*.6)},${Math.floor(color.g*.6)},${Math.floor(color.b*.6)})`);
+            root.style.setProperty('--theme-color-light', `rgb(${Math.min(255,color.r+60)},${Math.min(255,color.g+60)},${Math.min(255,color.b+60)})`);
             document.body.classList.add('loaded');
         }
 
+        // ── Meta tag güncelle ────────────────────────────────────────────────
         function updateMetaTags(playlistInfo, firstVideo) {
             document.title = `${playlistInfo.title} - YouTube Playlist Player`;
-            
             const currentUrl = `${window.location.origin}/${currentPlaylistId}`;
-            
-            const playlistThumbnail = firstVideo?.thumbnail || 
-                                     playlistInfo.thumbnails?.maxres?.url || 
-                                     playlistInfo.thumbnails?.high?.url || 
-                                     playlistInfo.thumbnails?.medium?.url || 
-                                     playlistInfo.thumbnails?.default?.url ||
-                                     '';
-            
-            const description = `${currentPlaylist.length} video • ${playlistInfo.channelTitle || 'YouTube'}`;
-            
-            const metaDescription = document.querySelector('meta[name="description"]');
-            if (metaDescription) {
-                metaDescription.content = description;
-            }
-            
-            document.getElementById('ogTitle').setAttribute('content', playlistInfo.title);
-            document.getElementById('ogDescription').setAttribute('content', description);
-            document.getElementById('ogUrl').setAttribute('content', currentUrl);
-            document.getElementById('ogImage').setAttribute('content', playlistThumbnail);
-            
-            document.getElementById('twitterTitle').setAttribute('content', playlistInfo.title);
-            document.getElementById('twitterDescription').setAttribute('content', description);
-            document.getElementById('twitterUrl').setAttribute('content', currentUrl);
-            document.getElementById('twitterImage').setAttribute('content', playlistThumbnail);
+            const thumb = firstVideo?.thumbnail ||
+                          playlistInfo.thumbnails?.maxres?.url ||
+                          playlistInfo.thumbnails?.high?.url ||
+                          playlistInfo.thumbnails?.medium?.url || '';
+            const desc = `${currentPlaylist.length} video • ${playlistInfo.channelTitle || 'YouTube'}`;
+
+            document.querySelector('meta[name="description"]').content = desc;
+            document.getElementById('ogTitle').content       = playlistInfo.title;
+            document.getElementById('ogDescription').content = desc;
+            document.getElementById('ogUrl').content         = currentUrl;
+            document.getElementById('ogImage').content       = thumb;
+            document.getElementById('twitterTitle').content       = playlistInfo.title;
+            document.getElementById('twitterDescription').content = desc;
+            document.getElementById('twitterUrl').content         = currentUrl;
+            document.getElementById('twitterImage').content       = thumb;
         }
 
+        // ── Playlist yükle ───────────────────────────────────────────────────
         async function loadPlaylist() {
             const input = document.getElementById('playlistInput').value.trim();
-            if (!input) {
-                showError('Lütfen bir playlist URL\'si girin!');
-                return;
-            }
+            if (!input) { showError('Lütfen bir playlist URL\'si girin!'); return; }
+
+            const playlistId = extractPlaylistId(input);
+            if (!playlistId) { showError('Geçersiz playlist URL\'si!'); return; }
+
+            currentPlaylistId = playlistId;
+
+            document.getElementById('loadingBox').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('playerContainer').classList.add('hidden');
 
             try {
-                const playlistId = extractPlaylistId(input);
-                if (!playlistId) {
-                    showError('Geçersiz playlist URL\'si!');
-                    return;
-                }
+                // Playlist bilgisi
+                const plRes  = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`);
+                const plData = await plRes.json();
+                if (!plData.items?.length) throw new Error('Playlist bulunamadı!');
+                const playlistInfo = plData.items[0].snippet;
 
-                currentPlaylistId = playlistId;
-
-                document.getElementById('loadingBox').classList.remove('hidden');
-                document.getElementById('emptyState').classList.add('hidden');
-                document.getElementById('playerContainer').classList.add('hidden');
-
-                const playlistResponse = await fetch(
-                    `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${API_KEY}`
-                );
-                const playlistData = await playlistResponse.json();
-
-                if (!playlistData.items || playlistData.items.length === 0) {
-                    throw new Error('Playlist bulunamadı!');
-                }
-
-                const playlistInfo = playlistData.items[0].snippet;
-
-                let allVideos = [];
-                let nextPageToken = '';
-
+                // Videolar
+                let allVideos = [], nextPageToken = '';
                 do {
-                    const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken=' + nextPageToken : ''}`;
-                    const response = await fetch(url);
-                    const data = await response.json();
-
-                    if (data.error) {
-                        throw new Error(data.error.message);
-                    }
-
-                    allVideos = allVideos.concat(data.items);
-                    nextPageToken = data.nextPageToken;
+                    const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${API_KEY}${nextPageToken ? '&pageToken='+nextPageToken : ''}`);
+                    const d = await r.json();
+                    if (d.error) throw new Error(d.error.message);
+                    allVideos = allVideos.concat(d.items);
+                    nextPageToken = d.nextPageToken;
                 } while (nextPageToken);
 
-                const videoIds = allVideos.map(item => item.snippet.resourceId.videoId).join(',');
-                const detailsResponse = await fetch(
-                    `https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id=${videoIds}&key=${API_KEY}`
-                );
-                const detailsData = await detailsResponse.json();
+                // Detaylar
+                const videoIds = allVideos.map(i => i.snippet.resourceId.videoId).join(',');
+                const detRes   = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id=${videoIds}&key=${API_KEY}`);
+                const detData  = await detRes.json();
 
-                currentPlaylist = allVideos.filter(item => {
-                    return item.snippet.title !== 'Private video' && 
-                           item.snippet.title !== 'Deleted video' &&
-                           item.snippet.thumbnails;
-                }).map((item, index) => {
-                    const details = detailsData.items ? detailsData.items.find(d => d.id === item.snippet.resourceId.videoId) : null;
-                    return {
-                        videoId: item.snippet.resourceId.videoId,
-                        title: item.snippet.title,
-                        thumbnail: details?.snippet?.thumbnails?.maxresdefault?.url ||
-                                  details?.snippet?.thumbnails?.standard?.url ||
-                                  details?.snippet?.thumbnails?.high?.url ||
-                                  item.snippet.thumbnails.medium?.url || 
-                                  item.snippet.thumbnails.default?.url,
-                        channel: item.snippet.channelTitle,
-                        duration: details ? formatDuration(details.contentDetails.duration) : 'N/A',
-                        viewCount: details && details.statistics ? parseInt(details.statistics.viewCount).toLocaleString('tr-TR') : '0'
-                    };
-                });
+                currentPlaylist = allVideos
+                    .filter(i => i.snippet.title !== 'Private video' && i.snippet.title !== 'Deleted video' && i.snippet.thumbnails)
+                    .map(item => {
+                        const det = detData.items?.find(d => d.id === item.snippet.resourceId.videoId);
+                        return {
+                            videoId:   item.snippet.resourceId.videoId,
+                            title:     item.snippet.title,
+                            thumbnail: det?.snippet?.thumbnails?.maxresdefault?.url ||
+                                       det?.snippet?.thumbnails?.standard?.url ||
+                                       det?.snippet?.thumbnails?.high?.url ||
+                                       item.snippet.thumbnails.medium?.url ||
+                                       item.snippet.thumbnails.default?.url,
+                            channel:   item.snippet.channelTitle,
+                            duration:  det ? formatDuration(det.contentDetails.duration) : 'N/A',
+                            viewCount: det?.statistics ? parseInt(det.statistics.viewCount).toLocaleString('tr-TR') : '0'
+                        };
+                    });
 
                 document.getElementById('playlistTitle').textContent = playlistInfo.title;
-                document.getElementById('videoCount').textContent = `${currentPlaylist.length} şarkı`;
-                
+                document.getElementById('videoCount').textContent    = `${currentPlaylist.length} şarkı`;
+
                 updateMetaTags(playlistInfo, currentPlaylist[0]);
 
-                window.history.pushState({}, '', `/${playlistId}`);
-                
+                // URL'i path tabanlı yap, # olmadan
+                history.pushState({}, '', `/${playlistId}`);
+
                 displayPlaylist();
                 playVideo(0);
 
@@ -804,30 +531,31 @@
             }
         }
 
+        // ── Playlist listele ─────────────────────────────────────────────────
         function displayPlaylist() {
-            const videoList = document.getElementById('videoList');
-            videoList.innerHTML = currentPlaylist.map((video, index) => `
-                <div class="video-item ${index === currentVideoIndex ? 'active' : ''}" onclick="playVideo(${index})">
-                    <img src="${video.thumbnail}" alt="${video.title}" class="video-item-thumbnail">
+            document.getElementById('videoList').innerHTML = currentPlaylist.map((v, i) => `
+                <div class="video-item ${i === currentVideoIndex ? 'active' : ''}" onclick="playVideo(${i})">
+                    <img src="${v.thumbnail}" alt="${v.title}" class="video-item-thumbnail">
                     <div class="video-item-info">
-                        <div class="video-item-title">${video.title}</div>
+                        <div class="video-item-title">${v.title}</div>
                         <div class="video-item-meta">
-                            <span class="video-item-channel">${video.channel}</span>
+                            <span class="video-item-channel">${v.channel}</span>
                             <span class="meta-dot"></span>
-                            <span>${video.duration}</span>
+                            <span>${v.duration}</span>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
+        // ── Video oynat ──────────────────────────────────────────────────────
         async function playVideo(index) {
             currentVideoIndex = index;
             const video = currentPlaylist[index];
-            
-            document.getElementById('videoPlayer').src = 
+
+            document.getElementById('videoPlayer').src =
                 `https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`;
-            
+
             document.getElementById('currentVideoInfo').innerHTML = `
                 <img src="${video.thumbnail}" alt="${video.title}" class="video-thumbnail" id="mainThumbnail">
                 <div class="video-details">
@@ -844,60 +572,25 @@
 
             const colors = await extractColors(video.thumbnail);
             applyThemeColor(colors);
-
             displayPlaylist();
         }
 
-        document.getElementById('playlistInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+        // ── Event listeners ──────────────────────────────────────────────────
+        document.getElementById('playlistInput').addEventListener('keypress', e => {
+            if (e.key === 'Enter') loadPlaylist();
+        });
+
+        // Geri/ileri tuşu
+        window.addEventListener('popstate', () => {
+            const id = getPlaylistIdFromPath();
+            if (id) {
+                document.getElementById('playlistInput').value = id;
                 loadPlaylist();
             }
         });
 
-        window.addEventListener('hashchange', function() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                document.getElementById('playlistInput').value = hash;
-                loadPlaylist();
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', function() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                document.getElementById('playlistInput').value = hash;
-                setTimeout(() => {
-                    loadPlaylist();
-                }, 500);
-            }
-        });
-
-        function getPlaylistIdFromUrl() {
-    const pathname = window.location.pathname;
-    // /PLxxxxxx formatından ID çıkar
-    const match = pathname.match(/\/(PL[a-zA-Z0-9_-]{16,})/);
-    return match ? match[1] : null;
-}
-
-// hashchange yerine popstate kullan:
-window.addEventListener('popstate', function() {
-    const playlistId = getPlaylistIdFromUrl();
-    if (playlistId) {
-        document.getElementById('playlistInput').value = playlistId;
-        loadPlaylist();
-    }
-});
-
-// DOMContentLoaded güncellemesi:
-window.addEventListener('DOMContentLoaded', function() {
-    const playlistId = getPlaylistIdFromUrl();
-    if (playlistId) {
-        document.getElementById('playlistInput').value = playlistId;
-        setTimeout(() => {
-            loadPlaylist();
-        }, 500);
-    }
-});
+        // Sayfa açılışında URL'den yükle
+        window.addEventListener('DOMContentLoaded', initFromUrl);
     </script>
 </body>
-    </html>
+</html>
