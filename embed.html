@@ -494,11 +494,19 @@ const API_KEY = 'AIzaSyDPKFr63Y-zWgEkjdDKD893udw8lqbDFIw';
 
 let playlist   = [];
 let currentIdx = 0;
-let ytPlayer   = null;   // iframe modu için YT.Player
+let ytPlayer   = null;
 let isPlaying  = false;
 let isReady    = false;
 let progTimer  = null;
-let panelOpen  = sizeMode === 'full' && !IS_STANDALONE;
+let panelOpen  = !IS_STANDALONE && sizeMode === 'full';
+
+// Panel başlangıç görünürlüğü uygula
+if (!IS_STANDALONE) {
+  document.getElementById('panelE').style.display = panelOpen ? 'flex' : 'none';
+  if (panelOpen) {
+    document.getElementById('expandIco').style.transform = 'rotate(180deg)';
+  }
+}
 
 // ══════════════════════════════════════════════════════════
 //  YOUTUBE IFRAME API
@@ -661,7 +669,7 @@ function playTrack(idx) {
 
     setPlaying(true);
   } else {
-    if (isReady && ytPlayer) ytPlayer.loadVideoById(t.videoId);
+    if (isReady && ytPlayer) ytPlayer.cueVideoById(t.videoId);
   }
 
   // Embed mod YT linki
@@ -871,6 +879,9 @@ window.addEventListener('message', e => {
       if (!IS_STANDALONE) {
         document.body.classList.remove('size-compact','size-normal','size-full');
         document.body.classList.add('size-' + d.value);
+        panelOpen = d.value === 'full';
+        document.getElementById('panelE').style.display = panelOpen ? 'flex' : 'none';
+        document.getElementById('expandIco').style.transform = panelOpen ? 'rotate(180deg)' : '';
       }
       break;
     case 'getState':
