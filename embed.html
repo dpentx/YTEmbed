@@ -209,39 +209,93 @@ body.standalone-mode .standalone-info { display:block; }
 .si-btn.yt    { color:#ff4e4e; border-color:rgba(255,78,78,0.2); }
 .si-btn.yt:hover { background:rgba(255,78,78,0.08); }
 
-/* Standalone: bar is a secondary control strip, panel expands below */
+/* Standalone bar */
 body.standalone-mode .bar {
-  height:auto; padding:14px 20px;
-  border-top:1px solid var(--border);
+  height:auto; padding:12px 16px;
+  border-bottom:1px solid var(--border);
 }
-body.standalone-mode .panel { max-height:50vh; }
-body.standalone-mode .panel-list { padding:0 14px 14px; }
 body.standalone-mode .track-item { padding:7px 10px; }
 body.standalone-mode .track-thumb { width:40px; height:40px; }
 body.standalone-mode .track-name { font-size:13px; }
 
-/* Wide layout: video left, info+list right */
-@media (min-width:900px) {
-  body.standalone-mode .root { flex-direction:column; }
+/* ── URL input bar (standalone) ── */
+.url-bar {
+  display:none;
+  align-items:center; gap:8px;
+  padding:10px 16px;
+  border-bottom:1px solid var(--border);
+  position:relative; z-index:2; flex-shrink:0;
+}
+body.standalone-mode .url-bar { display:flex; }
+.url-input {
+  flex:1; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; padding:7px 12px;
+  color:var(--text); font-family:'DM Sans',sans-serif; font-size:12px;
+  outline:none; transition:border-color .2s;
+}
+.url-input:focus { border-color:rgba(255,255,255,0.18); }
+.url-input::placeholder { color:var(--text-dim); }
+.url-paste-btn {
+  width:32px; height:32px; border-radius:8px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-dim); cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .15s; flex-shrink:0;
+}
+.url-paste-btn:hover { color:var(--text); border-color:rgba(255,255,255,0.15); background:var(--surface2); }
+.url-load-btn {
+  background:var(--accent); color:#000; border:none;
+  border-radius:8px; padding:7px 14px;
+  font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600;
+  cursor:pointer; white-space:nowrap; flex-shrink:0;
+  transition:background .15s;
+}
+.url-load-btn:hover { background:#22e865; }
 
-  .sa-layout {
-    display:flex; flex-direction:row; align-items:flex-start;
+/* ── Tab sistemi (standalone, mobil) ── */
+.sa-tabs {
+  display:none;
+  border-bottom:1px solid var(--border);
+  flex-shrink:0; position:relative; z-index:2;
+}
+body.standalone-mode .sa-tabs { display:flex; }
+.sa-tab {
+  flex:1; padding:10px 0; text-align:center;
+  font-size:12px; font-weight:600; color:var(--text-dim);
+  cursor:pointer; border-bottom:2px solid transparent;
+  transition:all .15s; background:none; border-top:none;
+  border-left:none; border-right:none; font-family:'DM Sans',sans-serif;
+}
+.sa-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+.sa-tab:hover:not(.active) { color:var(--text); }
+
+/* ── Tab içerikleri ── */
+.tab-video { display:none; }
+.tab-list  { display:none; }
+body.standalone-mode .tab-video.active { display:flex; flex-direction:column; }
+body.standalone-mode .tab-list.active  { display:flex; flex-direction:column; flex:1; overflow:hidden; }
+
+/* Desktop: her iki tab içeriği yan yana görünür, tab bar gizlenir */
+@media (min-width:900px) {
+  body.standalone-mode .sa-tabs { display:none; }
+  body.standalone-mode .tab-video,
+  body.standalone-mode .tab-list { display:flex !important; }
+
+  body.standalone-mode .root { flex-direction:column; }
+  .sa-layout { display:flex; flex-direction:row; align-items:flex-start; }
+
+  body.standalone-mode .tab-video {
+    flex:1; min-width:0; flex-direction:column;
   }
-  body.standalone-mode .video-stage {
-    flex:1; min-width:0;
-  }
-  body.standalone-mode .video-stage::after { padding-bottom:56.25%; }
+  body.standalone-mode .video-stage { display:block; }
 
   .sa-sidebar {
     width:340px; flex-shrink:0;
     background:var(--surface);
     display:flex; flex-direction:column;
-    min-height:100%;
+    height:100%;
   }
-  body.standalone-mode .standalone-info {
-    background:none;
-    padding:20px 18px 14px;
-  }
+  body.standalone-mode .standalone-info { background:none; padding:20px 18px 14px; }
   body.standalone-mode .bar { border-top:none; border-bottom:1px solid var(--border); padding:12px 16px; }
   body.standalone-mode .panel { max-height:none; flex:1; }
   body.standalone-mode .panel-list { padding:0 12px 12px; }
@@ -252,6 +306,7 @@ body.standalone-mode .track-name { font-size:13px; }
   .sa-layout  { display:contents; }
   body.standalone-mode .si-title { font-size:17px; }
   body.standalone-mode .standalone-info { padding:14px 16px 10px; }
+  body.standalone-mode .panel { max-height:none; flex:1; }
 }
 </style>
 </head>
@@ -260,19 +315,40 @@ body.standalone-mode .track-name { font-size:13px; }
 <div class="root" id="root">
   <div class="ambient" id="ambient"></div>
 
-  <!-- ── STANDALONE: Video player (visible only in standalone mode) ── -->
-  <div class="sa-layout standalone-only">
-    <div class="video-stage">
-      <iframe id="yt-player-visible"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        allowfullscreen
-        src="about:blank"></iframe>
-    </div>
+  <!-- ── URL GİRİŞİ (sadece standalone) ── -->
+  <div class="url-bar standalone-only">
+    <button class="url-paste-btn" onclick="pasteUrl()" title="Panodan yapıştır">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 2h-4.18C14.4.84 13.3 0 12 0c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm7 18H5V4h2v3h10V4h2v16z"/>
+      </svg>
+    </button>
+    <input class="url-input" id="urlInput"
+      placeholder="YouTube playlist URL veya ID..."
+      autocomplete="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter') loadFromInput()">
+    <button class="url-load-btn" onclick="loadFromInput()">Yükle</button>
+  </div>
 
-    <div class="sa-sidebar">
-      <!-- Info -->
+  <!-- ── TAB BAR (standalone, mobil) ── -->
+  <div class="sa-tabs standalone-only">
+    <button class="sa-tab active" id="tabBtnVideo" onclick="switchTab('video')">▶ Video</button>
+    <button class="sa-tab" id="tabBtnList"  onclick="switchTab('list')">☰ Liste</button>
+  </div>
+
+  <!-- ── STANDALONE: sa-layout içinde video + sidebar ── -->
+  <div class="sa-layout standalone-only">
+
+    <!-- Video tab (sol / tam ekran mobilde) -->
+    <div class="tab-video active" id="tabVideo">
+      <div class="video-stage">
+        <iframe id="yt-player-visible"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          src="about:blank"></iframe>
+      </div>
+      <!-- Standalone info (video altı, sadece desktop'ta sidebar'a taşınır) -->
       <div class="standalone-info">
-        <div class="si-title"   id="siTitle">Yükleniyor...</div>
+        <div class="si-title"   id="siTitle">Playlist bekleniyor</div>
         <div class="si-channel" id="siChannel">—</div>
         <div class="si-actions">
           <a class="si-btn yt" id="siYtLink" href="#" target="_blank" rel="noopener">
@@ -283,36 +359,40 @@ body.standalone-mode .track-name { font-size:13px; }
           </a>
         </div>
       </div>
+    </div>
 
-      <!-- Bar (kontroller — standalone'da playlist header gibi çalışır) -->
-      <div class="bar">
-        <img class="bar-thumb" id="barThumb" src="" alt="">
-        <div class="bar-info">
-          <div class="bar-title"   id="barTitle">Bekleniyor</div>
-          <div class="bar-channel" id="barChannel">—</div>
-          <div class="bar-prog"><div class="bar-prog-fill" id="progFill"></div></div>
+    <!-- Sidebar (desktop) / Liste tab (mobil) -->
+    <div class="sa-sidebar">
+      <div class="tab-list active" id="tabList" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+        <!-- Bar (kontroller) -->
+        <div class="bar">
+          <img class="bar-thumb" id="barThumb" src="" alt="">
+          <div class="bar-info">
+            <div class="bar-title"   id="barTitle">Bekleniyor</div>
+            <div class="bar-channel" id="barChannel">—</div>
+            <div class="bar-prog"><div class="bar-prog-fill" id="progFill"></div></div>
+          </div>
+          <div class="bar-ctrls">
+            <button class="ctrl-btn" onclick="prevTrack()" title="Önceki">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            <button class="ctrl-btn play" id="btnPlay" onclick="togglePlay()" title="Oynat/Durdur">
+              <svg id="icPlay"  width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg id="icPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button class="ctrl-btn" onclick="nextTrack()" title="Sonraki">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+            </button>
+          </div>
         </div>
-        <div class="bar-ctrls">
-          <button class="ctrl-btn" onclick="prevTrack()" title="Önceki">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-          </button>
-          <button class="ctrl-btn play" id="btnPlay" onclick="togglePlay()" title="Oynat/Durdur">
-            <svg id="icPlay"  width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-            <svg id="icPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-          </button>
-          <button class="ctrl-btn" onclick="nextTrack()" title="Sonraki">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.35 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
-          </button>
+        <!-- Playlist -->
+        <div class="panel" id="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="panelTitle">Playlist</span>
+            <span class="panel-count" id="panelCount">0 video</span>
+          </div>
+          <div class="panel-list" id="panelList"></div>
         </div>
-      </div>
-
-      <!-- Playlist panel -->
-      <div class="panel" id="panel">
-        <div class="panel-header">
-          <span class="panel-title" id="panelTitle">Playlist</span>
-          <span class="panel-count" id="panelCount">0 video</span>
-        </div>
-        <div class="panel-list" id="panelList"></div>
       </div>
     </div>
   </div>
@@ -340,6 +420,11 @@ body.standalone-mode .track-name { font-size:13px; }
         <button class="expand-btn embed-only" onclick="togglePanel()" title="Liste">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" id="expandIco"><path d="M7 10l5 5 5-5z"/></svg>
         </button>
+        <a class="ctrl-btn embed-yt-link" id="embedYtLink" href="#" target="_blank" rel="noopener" title="YouTube'da Aç" style="color:#ff4e4e;text-decoration:none;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M21.8 8a2.75 2.75 0 0 0-1.94-1.95C18.2 5.6 12 5.6 12 5.6s-6.2 0-7.86.45A2.75 2.75 0 0 0 2.2 8 28.8 28.8 0 0 0 1.75 12c0 1.37.15 2.71.45 4a2.75 2.75 0 0 0 1.94 1.95C5.8 18.4 12 18.4 12 18.4s6.2 0 7.86-.45A2.75 2.75 0 0 0 21.8 16a28.8 28.8 0 0 0 .45-4 28.8 28.8 0 0 0-.45-4zM9.75 15V9l5.75 3-5.75 3z"/>
+          </svg>
+        </a>
       </div>
     </div>
 
@@ -531,6 +616,10 @@ function playTrack(idx) {
     if (isReady && ytPlayer) ytPlayer.loadVideoById(t.videoId);
   }
 
+  // Embed mod YT linki
+  const embedYt = document.getElementById('embedYtLink');
+  if (embedYt) embedYt.href = `https://www.youtube.com/watch?v=${t.videoId}`;
+
   // Bar güncelle (hem standalone hem embed)
   updateBar(t);
   updateAmbient(t.thumbnail);
@@ -609,8 +698,45 @@ function startProg() {
 function stopProg() { clearInterval(progTimer); }
 
 // ══════════════════════════════════════════════════════════
-//  PANEL TOGGLE (iframe modu)
+//  TAB SİSTEMİ (standalone, mobil)
 // ══════════════════════════════════════════════════════════
+function switchTab(tab) {
+  const isVideo = tab === 'video';
+  document.getElementById('tabBtnVideo').classList.toggle('active', isVideo);
+  document.getElementById('tabBtnList').classList.toggle('active', !isVideo);
+  // Mobilde display toggle — desktop'ta CSS override ile ikisi de görünür
+  if (window.innerWidth < 900) {
+    document.getElementById('tabVideo').style.display = isVideo ? 'flex' : 'none';
+    document.getElementById('tabList').style.display  = isVideo ? 'none' : 'flex';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  URL GİRİŞİ (standalone)
+// ══════════════════════════════════════════════════════════
+async function pasteUrl() {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text) document.getElementById('urlInput').value = text.trim();
+  } catch(e) {
+    // Clipboard izni yoksa input'u fokusla
+    document.getElementById('urlInput').focus();
+  }
+}
+
+function loadFromInput() {
+  const raw = document.getElementById('urlInput').value.trim();
+  if (!raw) return;
+  let id = raw;
+  try {
+    const u = new URL(raw.includes('://') ? raw : 'https://youtube.com/playlist?list=' + raw);
+    id = u.searchParams.get('list') || raw;
+  } catch(e) {}
+  if (!id.startsWith('PL')) id = 'PL' + id;
+  loadPlaylist(id);
+}
+
+
 function togglePanel() {
   panelOpen = !panelOpen;
   document.getElementById('panelE').style.display = panelOpen ? 'flex' : 'none';
