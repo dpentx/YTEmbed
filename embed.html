@@ -171,7 +171,6 @@ body.standalone-mode .root {
   border:none; border-radius:0; position:relative;
 }
 body.standalone-mode .embed-only { display:none !important; }
-
 /* Video stage */
 .video-stage {
   display:none;
@@ -278,23 +277,37 @@ body.standalone-mode .tab-list.active  { display:flex; flex-direction:column; fl
 /* Desktop: her iki tab içeriği yan yana görünür, tab bar gizlenir */
 @media (min-width:900px) {
   body.standalone-mode .sa-tabs { display:none; }
-  body.standalone-mode .tab-video,
-  body.standalone-mode .tab-list { display:flex !important; }
 
-  body.standalone-mode .root { flex-direction:column; }
-  .sa-layout { display:flex; flex-direction:row; align-items:flex-start; }
+  /* sa-layout: flex row — video sol, sidebar sağ */
+  .sa-layout {
+    display:flex !important;
+    flex-direction:row;
+    align-items:stretch;
+    flex:1;
+    min-height:0;
+  }
 
-  body.standalone-mode .tab-video {
-    flex:1; min-width:0; flex-direction:column;
+  /* tabVideo: video + info, sol taraf */
+  body.standalone-mode #tabVideo {
+    display:flex !important;
+    flex:1; min-width:0;
+    flex-direction:column;
   }
   body.standalone-mode .video-stage { display:block; }
 
+  /* tabList: sidebar içinde, sağ taraf */
   .sa-sidebar {
     width:340px; flex-shrink:0;
     background:var(--surface);
     display:flex; flex-direction:column;
-    height:100%;
+    overflow:hidden;
   }
+  body.standalone-mode #tabList {
+    display:flex !important;
+    flex-direction:column;
+    flex:1; overflow:hidden;
+  }
+
   body.standalone-mode .standalone-info { background:none; padding:20px 18px 14px; }
   body.standalone-mode .bar { border-top:none; border-bottom:1px solid var(--border); padding:12px 16px; }
   body.standalone-mode .panel { max-height:none; flex:1; }
@@ -302,11 +315,18 @@ body.standalone-mode .tab-list.active  { display:flex; flex-direction:column; fl
 }
 
 @media (max-width:899px) {
+  /* Mobilde sa-layout içerikleri flow'a döner */
+  .sa-layout  { display:block !important; }
   .sa-sidebar { display:contents; }
-  .sa-layout  { display:contents; }
+
+  /* Başlangıçta tabVideo görünür, tabList gizli */
+  body.standalone-mode #tabVideo { display:flex; flex-direction:column; }
+  body.standalone-mode #tabList  { display:none; flex-direction:column; flex:1; overflow:hidden; }
+  body.standalone-mode .video-stage { display:block; }
+
   body.standalone-mode .si-title { font-size:17px; }
   body.standalone-mode .standalone-info { padding:14px 16px 10px; }
-  body.standalone-mode .panel { max-height:none; flex:1; }
+  body.standalone-mode .panel { max-height:60vh; }
 }
 </style>
 </head>
@@ -331,7 +351,7 @@ body.standalone-mode .tab-list.active  { display:flex; flex-direction:column; fl
 
   <!-- ── TAB BAR (standalone, mobil) ── -->
   <div class="sa-tabs standalone-only">
-    <button class="sa-tab active" id="tabBtnVideo" onclick="switchTab('video')">▶ Video</button>
+    <button class="sa-tab active" id="tabBtnVideo" onclick="switchTab('vid')">▶ Video</button>
     <button class="sa-tab" id="tabBtnList"  onclick="switchTab('list')">☰ Liste</button>
   </div>
 
@@ -363,7 +383,7 @@ body.standalone-mode .tab-list.active  { display:flex; flex-direction:column; fl
 
     <!-- Sidebar (desktop) / Liste tab (mobil) -->
     <div class="sa-sidebar">
-      <div class="tab-list active" id="tabList" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div class="tab-list" id="tabList">
         <!-- Bar (kontroller) -->
         <div class="bar">
           <img class="bar-thumb" id="barThumb" src="" alt="">
@@ -513,14 +533,41 @@ function onStateChange(e) {
 // ══════════════════════════════════════════════════════════
 //  PLAYLIST ID TESPİTİ
 // ══════════════════════════════════════════════════════════
-function initFromUrl() {
-  // Önce hash, sonra URL path (vercel rewrite ile geliyor)
-  let id = window.location.hash.slice(1)
-        || params.get('list')
-        || extractPathId(window.location.pathname);
+// ── Hash yardımcıları ─────────────────────────────────────
+// Format: #st:vid&pl:PLID  veya eski: #PLID
+function parseHash() {
+  const raw = window.location.hash.slice(1);
+  if (!raw) return { id: null, st: 'vid' };
+  // Yeni format
+  if (raw.includes('pl:')) {
+    const parts = Object.fromEntries(raw.split('&').map(p => p.split(':')));
+    return { id: parts.pl || null, st: parts.st || 'vid' };
+  }
+  // Eski format (geriye dönük uyumluluk)
+  if (raw.startsWith('PL')) return { id: raw, st: 'vid' };
+  return { id: null, st: 'vid' };
+}
 
-  if (id) loadPlaylist(id);
-  else    hideOverlay();
+function updateHash(plId, st) {
+  if (!IS_STANDALONE) return;
+  const newHash = `#st:${st}&pl:${plId}`;
+  history.replaceState(null, '', newHash);
+}
+
+function initFromUrl() {
+  const { id, st } = parseHash();
+  const pathId = extractPathId(window.location.pathname);
+  const finalId = id || params.get('list') || pathId;
+
+  if (st && IS_STANDALONE) {
+    // Tab durumunu uygula (ama liste yoksa video'da kal)
+    _currentTab = st;
+    if (window.innerWidth < 900) _applyTabDisplay(st);
+    _updateTabBtns(st);
+  }
+
+  if (finalId) loadPlaylist(finalId);
+  else         hideOverlay();
 }
 
 function extractPathId(path) {
@@ -578,6 +625,7 @@ async function loadPlaylist(id) {
       document.title = plSnip.title + ' — YTEmbed';
       document.getElementById('panelTitle').textContent  = plSnip.title;
       document.getElementById('panelCount').textContent  = `${playlist.length} video`;
+      updateHash(id, _currentTab);
     } else {
       document.getElementById('panelTitleE').textContent = plSnip.title;
       document.getElementById('panelCountE').textContent = `${playlist.length} video`;
@@ -700,15 +748,25 @@ function stopProg() { clearInterval(progTimer); }
 // ══════════════════════════════════════════════════════════
 //  TAB SİSTEMİ (standalone, mobil)
 // ══════════════════════════════════════════════════════════
+let _currentTab = 'vid';
+
 function switchTab(tab) {
-  const isVideo = tab === 'video';
-  document.getElementById('tabBtnVideo').classList.toggle('active', isVideo);
-  document.getElementById('tabBtnList').classList.toggle('active', !isVideo);
-  // Mobilde display toggle — desktop'ta CSS override ile ikisi de görünür
-  if (window.innerWidth < 900) {
-    document.getElementById('tabVideo').style.display = isVideo ? 'flex' : 'none';
-    document.getElementById('tabList').style.display  = isVideo ? 'none' : 'flex';
-  }
+  _currentTab = tab;
+  _updateTabBtns(tab);
+  if (window.innerWidth < 900) _applyTabDisplay(tab);
+  // Hash güncelle
+  const { id } = parseHash();
+  if (id) updateHash(id, tab);
+}
+
+function _updateTabBtns(tab) {
+  document.getElementById('tabBtnVideo').classList.toggle('active', tab === 'vid');
+  document.getElementById('tabBtnList').classList.toggle('active',  tab === 'list');
+}
+
+function _applyTabDisplay(tab) {
+  document.getElementById('tabVideo').style.display = tab === 'vid'  ? 'flex' : 'none';
+  document.getElementById('tabList').style.display  = tab === 'list' ? 'flex' : 'none';
 }
 
 // ══════════════════════════════════════════════════════════
